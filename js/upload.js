@@ -148,6 +148,13 @@
       return;
     }
 
+    window.App.analytics.track('character_generate_start', {
+      file_type: file.type,
+      file_size_kb: Math.round(file.size / 1024),
+      has_source: !!document.getElementById('character-source').value.trim(),
+      has_description: !!document.getElementById('character-desc').value.trim()
+    });
+
     doExtract(file);
   });
 
@@ -281,6 +288,10 @@
         generateBtn.innerHTML = '生成像素形象';
         previewPlaceholder.textContent = '上传图片后生成像素小人预览';
 
+        window.App.analytics.track('character_generate_fail', {
+          error_type: err && err.code === 'SUBJECT_TOO_SMALL' ? 'subject_too_small' : 'pixelate_error'
+        });
+
         if (err && err.code === 'SUBJECT_TOO_SMALL') {
           // 复杂度检测失败：显示专用提示
           extractActions.classList.remove('hidden');
@@ -330,6 +341,15 @@
     previewImg.src = dataURL;
 
     lastPixelResult = dataURL;
+
+    var options = getPixelOptions();
+    window.App.analytics.track('character_generate_done', {
+      pixel_size: options.pixelSize,
+      color_count: options.colorCount,
+      symmetry: options.symmetry,
+      outline: options.outline,
+      mode: result.mode || 'generic'
+    });
   }
 
   // ==================== Stage1 按钮事件 ====================
@@ -420,6 +440,13 @@
 
       window.App.db.saveCharacter(data).then(function () {
         window.App.showSuccess('角色 "' + name + '" 已保存到角色库');
+        window.App.analytics.track('character_save', {
+          has_source: !!data.source,
+          has_description: !!data.description,
+          has_quote: !!data.quote,
+          pixel_size: data.pixelSize,
+          color_count: data.colorCount
+        });
         resetState();
         window.App.resetUpload();
         document.getElementById('character-name').value = '';
@@ -440,6 +467,7 @@
       window.App.showError('导出失败', '没有可导出的像素形象');
       return;
     }
+    window.App.analytics.track('character_export');
     var link = document.createElement('a');
     link.download = 'character-pixel-' + Date.now() + '.png';
     link.href = lastPixelResult;

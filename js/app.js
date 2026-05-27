@@ -20,11 +20,14 @@
   function runStartupChecks() {
     if (!window.App || !window.App.db) return;
 
-    // 存储空间检测
+    // 存储空间检测 + 上报存储模式
     window.App.db.ready.then(function (status) {
       if (status && status.fallback) {
         console.warn('[Character Land] 使用 LocalStorage 降级方案');
       }
+      window.App.analytics.track('storage_mode', {
+        mode: (status && status.fallback) ? 'localstorage' : 'indexeddb'
+      });
     });
 
     window.App.db.checkStorageSpace().then(function (result) {
@@ -57,6 +60,10 @@
   // ==================== Tab 切换 ====================
 
   function switchTab(tabName) {
+    var titles = { character: '角色生成', scene: '场景编辑', resource: '资源管理' };
+    window.App.analytics.trackPageView(titles[tabName] || tabName);
+    window.App.analytics.track('tab_switch', { tab: tabName });
+
     document.querySelectorAll('.page-section').forEach(function (s) { s.classList.add('hidden'); });
     document.querySelectorAll('.tab-btn').forEach(function (b) {
       b.classList.remove('tab-active');
@@ -266,6 +273,7 @@
     }).then(function () {
       closeEditModal();
       window.App.showSuccess('角色 "' + name + '" 信息已更新');
+      window.App.analytics.track('character_edit');
       loadCharacters();
     }).catch(function (err) {
       window.App.showError('保存失败', err.message || '更新角色信息出错');
@@ -304,6 +312,7 @@
     window.App.db.deleteCharacter(currentDeleteId).then(function () {
       closeDeleteModal();
       window.App.showSuccess('角色已删除');
+      window.App.analytics.track('character_delete');
       loadCharacters();
     }).catch(function (err) {
       window.App.showError('删除失败', err.message || '删除角色出错');
@@ -318,6 +327,7 @@
         window.App.showError('导出失败', '未找到角色像素图');
         return;
       }
+      window.App.analytics.track('character_export');
       var link = document.createElement('a');
       link.download = 'character-' + (c.name || 'pixel') + '.png';
       link.href = c.pixelImage;

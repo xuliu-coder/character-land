@@ -705,12 +705,17 @@
 
     saveAllScenes(scenes);
     window.App.showSuccess('场景「' + name + '」已保存');
+    window.App.analytics.track('scene_save', {
+      character_count: placements.length,
+      template: currentTemplate
+    });
   });
 
   document.getElementById('new-scene-btn').addEventListener('click', function () {
     if (placements.length > 0) {
       if (!confirm('创建新场景将清除当前画布上的所有角色，是否继续？')) return;
     }
+    window.App.analytics.track('scene_create');
     pushHistory();
     placements = [];
     selectedId = null;
@@ -792,6 +797,11 @@
   // ==================== 6.0 导出场景 ====================
 
   document.getElementById('export-scene-btn').addEventListener('click', function () {
+    window.App.analytics.track('scene_export', {
+      character_count: placements.length,
+      template: currentTemplate
+    });
+
     var exportBtn = this;
     exportBtn.disabled = true;
     exportBtn.textContent = '导出中...';

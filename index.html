@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的角色世界 — Character Land</title>
   <meta name="description" content="上传喜欢的角色图片，生成像素风Q版小人，在场景中自由摆放">
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-VTFQTRYQKF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-VTFQTRYQKF');
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -396,6 +405,7 @@
         console.warn('[Character Land] 背景移除模型加载失败，将使用手动裁剪');
       });
   </script>
+  <script src="js/analytics.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/segmentation.js"></script>
   <script src="js/pixelate.js"></script>
