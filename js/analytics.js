@@ -4,6 +4,8 @@
 (function () {
   'use strict';
 
+  window.App = window.App || {};
+
   /**
    * 安全上报事件（即使 gtag 未加载也不会报错）
    * @param {string} eventName - 事件名称，使用 snake_case
