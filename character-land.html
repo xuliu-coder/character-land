@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Land - MVP原型</title>
+    <!-- 引入Tailwind CSS（无需本地安装） -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 配置黑白灰配色系统 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#212121',
+                        secondary: '#757575',
+                        border: '#E0E0E0',
+                        bgLight: '#F5F5F5',
+                        disabled: '#BDBDBD',
+                        error: '#D32F2F',
+                        success: '#388E3C'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .canvas-grid {
+                background-image: linear-gradient(#E0E0E0 1px, transparent 1px),
+                                  linear-gradient(90deg, #E0E0E0 1px, transparent 1px);
+                background-size: 20px 20px;
+            }
+            .draggable {
+                cursor: move;
+                user-select: none;
+            }
+            .tab-active {
+                border-bottom: 2px solid #212121;
+                color: #212121;
+                font-weight: 600;
+            }
+        }
+    </style>
+</head>
+<body class="bg-white text-primary font-sans">
+    <!-- 顶部导航栏 -->
+    <header class="border-b border-border">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <h1 class="text-xl font-bold">Character Land</h1>
+            <nav class="flex space-x-8">
+                <button id="tab-character" class="tab-active py-2 px-1" onclick="switchTab('character')">角色生成</button>
+                <button id="tab-scene" class="py-2 px-1 text-secondary hover:text-primary transition-colors" onclick="switchTab('scene')">场景编辑</button>
+                <button id="tab-resource" class="py-2 px-1 text-secondary hover:text-primary transition-colors" onclick="switchTab('resource')">资源管理</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto p-4">
+        <!-- 1. 角色生成模块 -->
+        <section id="page-character" class="block">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <!-- 左侧：上传与信息区 -->
+                <div class="bg-bgLight rounded-lg p-6 border border-border">
+                    <h2 class="text-lg font-semibold mb-4">上传角色信息</h2>
+                    
+                    <!-- 图片上传区域 -->
+                    <div class="mb-6">
+                        <label class="block text-secondary mb-2">📤 一键上传图片</label>
+                        <div id="upload-area" class="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors">
+                            <p class="text-secondary mb-2">拖拽或点击选择文件</p>
+                            <p class="text-xs text-secondary">支持JPG/PNG格式，最大5MB</p>
+                            <input type="file" id="file-input" accept="image/jpeg,image/png" class="hidden">
+                        </div>
+                        <p id="file-name" class="mt-2 text-sm text-secondary hidden"></p>
+                    </div>
+                    
+                    <!-- 角色信息表单 -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-secondary mb-1">角色名称 <span class="text-error">*</span></label>
+                            <input type="text" id="character-name" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary" placeholder="输入角色名称">
+                        </div>
+                        <div>
+                            <label class="block text-secondary mb-1">角色出处</label>
+                            <input type="text" id="character-source" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary" placeholder="如：《原神》《复仇者联盟》">
+                        </div>
+                        <div>
+                            <label class="block text-secondary mb-1">角色描述</label>
+                            <textarea id="character-desc" rows="2" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary" placeholder="简单描述角色特点"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-secondary mb-1">经典台词</label>
+                            <textarea id="character-quote" rows="2" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary" placeholder="角色的经典台词"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- 生成按钮 -->
+                    <button id="generate-btn" class="w-full mt-6 bg-primary text-white py-3 rounded font-medium hover:bg-opacity-90 transition-colors disabled:bg-disabled disabled:cursor-not-allowed" disabled>
+                        ▶️ 生成像素形象
+                    </button>
+                </div>
+                
+                <!-- 右侧：预览区 -->
+                <div class="bg-bgLight rounded-lg p-6 border border-border">
+                    <h2 class="text-lg font-semibold mb-4">像素形象预览</h2>
+                    <div id="preview-container" class="border border-border rounded-lg h-64 flex items-center justify-center mb-6">
+                        <p class="text-secondary">上传图片后生成像素小人预览</p>
+                    </div>
+                    
+                    <!-- 操作按钮（生成后显示） -->
+                    <div id="preview-actions" class="hidden space-y-3">
+                        <button class="w-full bg-primary text-white py-2 rounded font-medium hover:bg-opacity-90 transition-colors">
+                            ✅ 确认保存到角色库
+                        </button>
+                        <button class="w-full bg-white text-primary border border-border py-2 rounded font-medium hover:bg-bgLight transition-colors">
+                            🔄 重新生成
+                        </button>
+                        <button class="w-full bg-white text-primary border border-border py-2 rounded font-medium hover:bg-bgLight transition-colors">
+                            📥 导出单角色图片
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 场景编辑器模块 -->
+        <section id="page-scene" class="hidden">
+            <!-- 顶部工具栏 -->
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-border">
+                <div class="flex space-x-4">
+                    <button class="px-3 py-1 bg-white border border-border rounded hover:bg-bgLight transition-colors">📁 新建场景</button>
+                    <button class="px-3 py-1 bg-white border border-border rounded hover:bg-bgLight transition-colors">📂 打开场景</button>
+                    <button class="px-3 py-1 bg-white border border-border rounded hover:bg-bgLight transition-colors">💾 保存场景</button>
+                </div>
+                <button id="export-scene-btn" class="px-4 py-1 bg-primary text-white rounded hover:bg-opacity-90 transition-colors">
+                    📥 导出场景图片
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-12 gap-4 h-[calc(100vh-200px)]">
+                <!-- 左侧：资源面板 -->
+                <div class="col-span-2 bg-bgLight rounded-lg p-4 border border-border overflow-y-auto">
+                    <h3 class="font-semibold mb-3">📦 角色库</h3>
+                    <div class="grid grid-cols-2 gap-2 mb-6">
+                        <div class="bg-white border border-border rounded p-2 text-center draggable" draggable="true">
+                            <div class="w-full h-12 bg-border rounded mb-1"></div>
+                            <p class="text-xs">角色1</p>
+                        </div>
+                        <div class="bg-white border border-border rounded p-2 text-center draggable" draggable="true">
+                            <div class="w-full h-12 bg-border rounded mb-1"></div>
+                            <p class="text-xs">角色2</p>
+                        </div>
+                        <div class="bg-white border border-border rounded p-2 text-center draggable" draggable="true">
+                            <div class="w-full h-12 bg-border rounded mb-1"></div>
+                            <p class="text-xs">角色3</p>
+                        </div>
+                        <div class="bg-white border border-border rounded p-2 text-center draggable" draggable="true">
+                            <div class="w-full h-12 bg-border rounded mb-1"></div>
+                            <p class="text-xs">角色4</p>
+                        </div>
+                    </div>
+                    
+                    <h3 class="font-semibold mb-3">🧱 场景组件</h3>
+                    <div class="space-y-2">
+                        <div class="text-sm">地面</div>
+                        <div class="text-sm">墙壁</div>
+                        <div class="text-sm">家具</div>
+                        <div class="text-sm">装饰</div>
+                    </div>
+                </div>
+                
+                <!-- 中央：Canvas编辑区 -->
+                <div class="col-span-8 bg-white rounded-lg border border-border overflow-hidden">
+                    <div id="canvas-area" class="w-full h-full canvas-grid relative">
+                        <!-- 示例角色 -->
+                        <div class="absolute w-16 h-16 bg-border rounded draggable" style="left: 200px; top: 150px;">
+                            <div class="absolute -top-6 left-0 right-0 text-center text-xs">角色1</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧：属性面板 -->
+                <div class="col-span-2 bg-bgLight rounded-lg p-4 border border-border">
+                    <h3 class="font-semibold mb-3">元素属性</h3>
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <label class="block text-secondary mb-1">名称</label>
+                            <input type="text" value="角色1" class="w-full px-2 py-1 border border-border rounded text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-secondary mb-1">位置</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <span class="text-secondary">X:</span>
+                                    <input type="number" value="200" class="w-16 px-2 py-1 border border-border rounded text-sm">
+                                </div>
+                                <div>
+                                    <span class="text-secondary">Y:</span>
+                                    <input type="number" value="150" class="w-16 px-2 py-1 border border-border rounded text-sm">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-secondary mb-1">旋转</label>
+                            <input type="number" value="0" class="w-full px-2 py-1 border border-border rounded text-sm" min="0" max="360">
+                            <span class="text-secondary">°</span>
+                        </div>
+                        <div>
+                            <label class="block text-secondary mb-1">大小</label>
+                            <input type="range" min="50" max="200" value="100" class="w-full">
+                            <span class="text-secondary">100%</span>
+                        </div>
+                    </div>
+                    <button class="w-full mt-6 bg-white text-error border border-error py-2 rounded text-sm hover:bg-error hover:text-white transition-colors">
+                        🗑️ 删除元素
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 资源管理模块 -->
+        <section id="page-resource" class="hidden">
+            <!-- 标签切换 -->
+            <div class="flex space-x-6 mb-6 border-b border-border">
+                <button id="tab-characters" class="tab-active py-2 px-1" onclick="switchResourceTab('characters')">📋 角色库</button>
+                <button id="tab-scenes" class="py-2 px-1 text-secondary hover:text-primary transition-colors" onclick="switchResourceTab('scenes')">🗺️ 场景库</button>
+            </div>
+            
+            <!-- 角色库视图 -->
+            <div id="resource-characters" class="block">
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- 角色卡片 -->
+                    <div class="bg-bgLight rounded-lg border border-border overflow-hidden">
+                        <div class="h-32 bg-border flex items-center justify-center">
+                            <p class="text-secondary">像素图</p>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-medium">角色1</h4>
+                            <p class="text-xs text-secondary mb-2">出处：《原神》</p>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">✏️ 编辑</button>
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">📥 导出</button>
+                                <button class="flex-1 px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-bgLight rounded-lg border border-border overflow-hidden">
+                        <div class="h-32 bg-border flex items-center justify-center">
+                            <p class="text-secondary">像素图</p>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-medium">角色2</h4>
+                            <p class="text-xs text-secondary mb-2">出处：《复仇者联盟》</p>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">✏️ 编辑</button>
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">📥 导出</button>
+                                <button class="flex-1 px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-bgLight rounded-lg border border-border overflow-hidden">
+                        <div class="h-32 bg-border flex items-center justify-center">
+                            <p class="text-secondary">像素图</p>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-medium">角色3</h4>
+                            <p class="text-xs text-secondary mb-2">出处：《海贼王》</p>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">✏️ 编辑</button>
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">📥 导出</button>
+                                <button class="flex-1 px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-bgLight rounded-lg border border-border overflow-hidden">
+                        <div class="h-32 bg-border flex items-center justify-center">
+                            <p class="text-secondary">像素图</p>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-medium">角色4</h4>
+                            <p class="text-xs text-secondary mb-2">出处：《哈利波特》</p>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">✏️ 编辑</button>
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">📥 导出</button>
+                                <button class="flex-1 px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 场景库视图 -->
+            <div id="resource-scenes" class="hidden">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- 场景卡片 -->
+                    <div class="bg-bgLight rounded-lg border border-border overflow-hidden">
+                        <div class="h-40 bg-border flex items-center justify-center">
+                            <p class="text-secondary">场景预览</p>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-medium">我的场景1</h4>
+                            <p class="text-xs text-secondary mb-2">创建时间：2026-05-21</p>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">✏️ 编辑</button>
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">📥 导出</button>
+                                <button class="flex-1 px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-bgLight rounded-lg border border-border overflow-hidden">
+                        <div class="h-40 bg-border flex items-center justify-center">
+                            <p class="text-secondary">场景预览</p>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-medium">我的场景2</h4>
+                            <p class="text-xs text-secondary mb-2">创建时间：2026-05-20</p>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">✏️ 编辑</button>
+                                <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors">📥 导出</button>
+                                <button class="flex-1 px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 错误提示弹窗 -->
+    <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-6 w-80 shadow-lg">
+            <h3 id="error-title" class="text-lg font-semibold text-error mb-3">⚠️ 上传失败</h3>
+            <p id="error-message" class="text-secondary mb-6">不支持的文件格式，请上传JPG或PNG格式的图片</p>
+            <div class="flex justify-end space-x-3">
+                <button id="error-close-btn" class="px-4 py-2 bg-white border border-border rounded hover:bg-bgLight transition-colors">关闭</button>
+                <button id="error-retry-btn" class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 transition-colors hidden">重试</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成功提示弹窗 -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-6 w-80 shadow-lg">
+            <h3 class="text-lg font-semibold text-success mb-3">✅ 操作成功</h3>
+            <p id="success-message" class="text-secondary mb-6">图片已成功导出</p>
+            <div class="flex justify-end">
+                <button id="success-close-btn" class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 transition-colors">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 标签页切换
+        function switchTab(tabName) {
+            // 隐藏所有页面
+            document.getElementById('page-character').classList.add('hidden');
+            document.getElementById('page-scene').classList.add('hidden');
+            document.getElementById('page-resource').classList.add('hidden');
+            
+            // 移除所有标签的激活状态
+            document.getElementById('tab-character').classList.remove('tab-active');
+            document.getElementById('tab-scene').classList.remove('tab-active');
+            document.getElementById('tab-resource').classList.remove('tab-active');
+            
+            // 显示选中的页面
+            document.getElementById(`page-${tabName}`).classList.remove('hidden');
+            // 激活选中的标签
+            document.getElementById(`tab-${tabName}`).classList.add('tab-active');
+        }
+
+        // 资源管理标签切换
+        function switchResourceTab(tabName) {
+            document.getElementById('resource-characters').classList.add('hidden');
+            document.getElementById('resource-scenes').classList.add('hidden');
+            document.getElementById('tab-characters').classList.remove('tab-active');
+            document.getElementById('tab-scenes').classList.remove('tab-active');
+            
+            document.getElementById(`resource-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('tab-active');
+        }
+
+        // 图片上传处理
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        const generateBtn = document.getElementById('generate-btn');
+        const previewContainer = document.getElementById('preview-container');
+        const previewActions = document.getElementById('preview-actions');
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // 检查文件格式
+            const allowedTypes = ['image/jpeg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) {
+                showError('上传失败', '不支持的文件格式，请上传JPG或PNG格式的图片');
+                return;
+            }
+
+            // 检查文件大小
+            if (file.size > 5 * 1024 * 1024) {
+                showError('上传失败', '图片大小超过5MB限制，请压缩后重新上传');
+                return;
+            }
+
+            // 显示文件名
+            fileName.textContent = `已选择：${file.name}`;
+            fileName.classList.remove('hidden');
+            
+            // 启用生成按钮
+            generateBtn.disabled = false;
+
+            // 显示图片预览（原图）
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                previewContainer.innerHTML = `<img src="${event.target.result}" alt="上传图片" class="max-h-full max-w-full object-contain">`;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 生成像素形象按钮点击
+        generateBtn.addEventListener('click', () => {
+            const characterName = document.getElementById('character-name').value.trim();
+            if (!characterName) {
+                showError('生成失败', '请输入角色名称');
+                return;
+            }
+
+            // 模拟生成过程（2秒延迟）
+            generateBtn.disabled = true;
+            generateBtn.textContent = '⏳ 生成中...';
+            previewContainer.innerHTML = '<p class="text-secondary">正在生成像素形象...</p>';
+
+            setTimeout(() => {
+                // 模拟生成成功
+                previewContainer.innerHTML = `
+                    <div class="w-32 h-32 bg-border rounded flex items-center justify-center">
+                        <p class="text-secondary">像素小人</p>
+                    </div>
+                `;
+                previewActions.classList.remove('hidden');
+                generateBtn.textContent = '▶️ 生成像素形象';
+                generateBtn.disabled = false;
+            }, 2000);
+        });
+
+        // 导出场景按钮点击
+        document.getElementById('export-scene-btn').addEventListener('click', () => {
+            showSuccess('场景已成功导出为PNG图片');
+        });
+
+        // 错误弹窗函数
+        function showError(title, message, showRetry = false) {
+            document.getElementById('error-title').textContent = title;
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-retry-btn').classList.toggle('hidden', !showRetry);
+            document.getElementById('error-modal').classList.remove('hidden');
+        }
+
+        // 成功弹窗函数
+        function showSuccess(message) {
+            document.getElementById('success-message').textContent = message;
+            document.getElementById('success-modal').classList.remove('hidden');
+        }
+
+        // 关闭弹窗
+        document.getElementById('error-close-btn').addEventListener('click', () => {
+            document.getElementById('error-modal').classList.add('hidden');
+        });
+
+        document.getElementById('success-close-btn').addEventListener('click', () => {
+            document.getElementById('success-modal').classList.add('hidden');
+        });
+
+        // 点击弹窗外部关闭
+        document.getElementById('error-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('error-modal')) {
+                document.getElementById('error-modal').classList.add('hidden');
+            }
+        });
+
+        document.getElementById('success-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('success-modal')) {
+                document.getElementById('success-modal').classList.add('hidden');
+            }
+        });
+
+        // 简单的拖拽功能实现
+        document.addEventListener('DOMContentLoaded', () => {
+            const draggables = document.querySelectorAll('.draggable');
+            const canvas = document.getElementById('canvas-area');
+            
+            draggables.forEach(draggable => {
+                draggable.addEventListener('mousedown', (e) => {
+                    if (!canvas.contains(draggable)) return;
+                    
+                    const startX = e.clientX;
+                    const startY = e.clientY;
+                    const originalLeft = parseInt(draggable.style.left) || 0;
+                    const originalTop = parseInt(draggable.style.top) || 0;
+                    
+                    const onMouseMove = (e) => {
+                        const dx = e.clientX - startX;
+                        const dy = e.clientY - startY;
+                        draggable.style.left = `${originalLeft + dx}px`;
+                        draggable.style.top = `${originalTop + dy}px`;
+                    };
+                    
+                    const onMouseUp = () => {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    };
+                    
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

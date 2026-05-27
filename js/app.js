@@ -1,0 +1,442 @@
+// app.js — 应用初始化 & Tab切换 & 资源管理
+
+(function () {
+  'use strict';
+
+  // ==================== 8.1 Polyfill ====================
+
+  if (!crypto.randomUUID) {
+    crypto.randomUUID = function () {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0;
+        var v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+  }
+
+  // ==================== 7.2 启动检测 ====================
+
+  function runStartupChecks() {
+    if (!window.App || !window.App.db) return;
+
+    // 存储空间检测
+    window.App.db.ready.then(function (status) {
+      if (status && status.fallback) {
+        console.warn('[Character Land] 使用 LocalStorage 降级方案');
+      }
+    });
+
+    window.App.db.checkStorageSpace().then(function (result) {
+      if (result.warning) {
+        setTimeout(function () {
+          window.App.showError('存储空间提醒', result.message);
+        }, 500);
+      }
+    });
+
+    // 移动端检测
+    if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+      var banner = document.getElementById('mobile-banner');
+      if (banner) banner.classList.remove('hidden');
+    }
+  }
+
+  // 延迟执行启动检测，确保依赖脚本已全部加载
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { runStartupChecks(); });
+  } else {
+    runStartupChecks();
+  }
+
+  // ==================== 状态 ====================
+
+  var currentEditId = null;
+  var currentDeleteId = null;
+
+  // ==================== Tab 切换 ====================
+
+  function switchTab(tabName) {
+    document.querySelectorAll('.page-section').forEach(function (s) { s.classList.add('hidden'); });
+    document.querySelectorAll('.tab-btn').forEach(function (b) {
+      b.classList.remove('tab-active');
+      b.classList.add('text-secondary', 'hover:text-primary', 'hover:bg-bgLight');
+    });
+
+    var page = document.getElementById('page-' + tabName);
+    if (page) page.classList.remove('hidden');
+
+    var tab = document.getElementById('tab-' + tabName);
+    if (tab) {
+      tab.classList.add('tab-active');
+      tab.classList.remove('text-secondary', 'hover:text-primary', 'hover:bg-bgLight');
+    }
+
+    // 切换到资源管理时自动刷新角色列表和场景列表
+    if (tabName === 'resource') {
+      loadCharacters();
+      loadScenes();
+    }
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      switchTab(this.getAttribute('data-tab'));
+    });
+  });
+
+  // ==================== 资源管理标签切换 ====================
+
+  document.getElementById('tab-characters').addEventListener('click', function () {
+    document.getElementById('resource-characters').classList.remove('hidden');
+    document.getElementById('resource-scenes').classList.add('hidden');
+    this.classList.add('tab-active');
+    this.classList.remove('text-secondary', 'hover:text-primary');
+    document.getElementById('tab-scenes').classList.remove('tab-active');
+    document.getElementById('tab-scenes').classList.add('text-secondary', 'hover:text-primary');
+    loadCharacters();
+  });
+
+  document.getElementById('tab-scenes').addEventListener('click', function () {
+    document.getElementById('resource-scenes').classList.remove('hidden');
+    document.getElementById('resource-characters').classList.add('hidden');
+    this.classList.add('tab-active');
+    this.classList.remove('text-secondary', 'hover:text-primary');
+    document.getElementById('tab-characters').classList.remove('tab-active');
+    document.getElementById('tab-characters').classList.add('text-secondary', 'hover:text-primary');
+    loadScenes();
+  });
+
+  // ==================== 4.3 角色列表加载与渲染 ====================
+
+  var characterGrid = document.getElementById('character-grid');
+  var characterCount = document.getElementById('character-count');
+  var searchInput = document.getElementById('search-character');
+  var filterSelect = document.getElementById('filter-source');
+
+  var allCharacters = [];
+
+  function loadCharacters() {
+    window.App.db.getAllCharacters().then(function (characters) {
+      allCharacters = characters;
+      updateSourceFilter(characters);
+      renderCharacterGrid(characters);
+    }).catch(function () {
+      characterGrid.innerHTML = '<p class="col-span-full text-center text-error py-12">加载角色失败，请刷新页面重试</p>';
+    });
+  }
+
+  function updateSourceFilter(characters) {
+    var sources = [];
+    characters.forEach(function (c) {
+      if (c.source && sources.indexOf(c.source) === -1) {
+        sources.push(c.source);
+      }
+    });
+
+    var currentValue = filterSelect.value;
+    filterSelect.innerHTML = '<option value="">全部出处</option>';
+    sources.forEach(function (s) {
+      var selected = s === currentValue ? ' selected' : '';
+      filterSelect.innerHTML += '<option value="' + escapeHtml(s) + '"' + selected + '>' + escapeHtml(s) + '</option>';
+    });
+  }
+
+  function getFilteredCharacters() {
+    var keyword = searchInput.value.trim().toLowerCase();
+    var sourceFilter = filterSelect.value;
+
+    return allCharacters.filter(function (c) {
+      var matchName = !keyword || c.name.toLowerCase().indexOf(keyword) !== -1;
+      var matchSource = !sourceFilter || c.source === sourceFilter;
+      return matchName && matchSource;
+    });
+  }
+
+  function renderCharacterGrid(characters) {
+    characterCount.textContent = '共 ' + characters.length + ' 个角色';
+
+    if (characters.length === 0) {
+      characterGrid.innerHTML = '<p class="col-span-full text-center text-secondary py-12">暂无角色，请先在"角色生成"页创建</p>';
+      return;
+    }
+
+    var html = '';
+    characters.forEach(function (c) {
+      html += ''
+        + '<div class="bg-bgLight rounded-lg border border-border overflow-hidden hover:shadow-md transition-shadow">'
+        + '  <div class="h-32 checkerboard-bg flex items-center justify-center p-2">'
+        + '    <img src="' + c.pixelImage + '" alt="' + escapeHtml(c.name) + '" class="max-h-full max-w-full object-contain pixel-art">'
+        + '  </div>'
+        + '  <div class="p-3">'
+        + '    <h4 class="font-medium text-sm truncate" title="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</h4>'
+        + '    <p class="text-xs text-secondary mb-2 truncate">' + (c.source ? '出处：' + escapeHtml(c.source) : '未设出处') + '</p>'
+        + '    <div class="flex space-x-1">'
+        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors edit-btn" data-id="' + c.id + '">编辑</button>'
+        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors export-btn" data-id="' + c.id + '">导出</button>'
+        + '      <button class="px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors delete-btn" data-id="' + c.id + '">删</button>'
+        + '    </div>'
+        + '  </div>'
+        + '</div>';
+    });
+
+    characterGrid.innerHTML = html;
+
+    // 绑定按钮事件
+    characterGrid.querySelectorAll('.edit-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        openEditModal(this.getAttribute('data-id'));
+      });
+    });
+
+    characterGrid.querySelectorAll('.export-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        exportCharacterImage(this.getAttribute('data-id'));
+      });
+    });
+
+    characterGrid.querySelectorAll('.delete-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        openDeleteModal(this.getAttribute('data-id'));
+      });
+    });
+  }
+
+  // ==================== 搜索与筛选 ====================
+
+  var searchTimer = null;
+  searchInput.addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function () {
+      renderCharacterGrid(getFilteredCharacters());
+    }, 150);
+  });
+
+  filterSelect.addEventListener('change', function () {
+    renderCharacterGrid(getFilteredCharacters());
+  });
+
+  // ==================== 4.4 编辑角色 ====================
+
+  var editModal = document.getElementById('edit-modal');
+  var editName = document.getElementById('edit-name');
+  var editSource = document.getElementById('edit-source');
+  var editDesc = document.getElementById('edit-desc');
+  var editQuote = document.getElementById('edit-quote');
+  var editId = document.getElementById('edit-character-id');
+
+  function openEditModal(id) {
+    window.App.db.getCharacter(id).then(function (c) {
+      if (!c) {
+        window.App.showError('编辑失败', '角色不存在');
+        return;
+      }
+      currentEditId = id;
+      editId.value = id;
+      editName.value = c.name || '';
+      editSource.value = c.source || '';
+      editDesc.value = c.description || '';
+      editQuote.value = c.quote || '';
+      editModal.classList.remove('hidden');
+    });
+  }
+
+  function closeEditModal() {
+    editModal.classList.add('hidden');
+    currentEditId = null;
+  }
+
+  document.getElementById('edit-cancel-btn').addEventListener('click', closeEditModal);
+  editModal.addEventListener('click', function (e) {
+    if (e.target === editModal) closeEditModal();
+  });
+
+  document.getElementById('edit-save-btn').addEventListener('click', function () {
+    var name = editName.value.trim();
+    if (!name) {
+      window.App.showError('保存失败', '角色名称不能为空');
+      return;
+    }
+
+    window.App.db.updateCharacter(currentEditId, {
+      name: name,
+      source: editSource.value.trim(),
+      description: editDesc.value.trim(),
+      quote: editQuote.value.trim()
+    }).then(function () {
+      closeEditModal();
+      window.App.showSuccess('角色 "' + name + '" 信息已更新');
+      loadCharacters();
+    }).catch(function (err) {
+      window.App.showError('保存失败', err.message || '更新角色信息出错');
+    });
+  });
+
+  // ==================== 4.4 删除角色 ====================
+
+  var deleteModal = document.getElementById('delete-modal');
+  var deleteMessage = document.getElementById('delete-message');
+  var deleteId = document.getElementById('delete-character-id');
+
+  function openDeleteModal(id) {
+    window.App.db.getCharacter(id).then(function (c) {
+      if (!c) return;
+      currentDeleteId = id;
+      deleteId.value = id;
+      deleteMessage.textContent = '确定要删除角色 "' + c.name + '" 吗？此操作不可撤销。';
+      deleteModal.classList.remove('hidden');
+    });
+  }
+
+  function closeDeleteModal() {
+    deleteModal.classList.add('hidden');
+    currentDeleteId = null;
+  }
+
+  document.getElementById('delete-cancel-btn').addEventListener('click', closeDeleteModal);
+  deleteModal.addEventListener('click', function (e) {
+    if (e.target === deleteModal) closeDeleteModal();
+  });
+
+  document.getElementById('delete-confirm-btn').addEventListener('click', function () {
+    if (!currentDeleteId) return;
+
+    window.App.db.deleteCharacter(currentDeleteId).then(function () {
+      closeDeleteModal();
+      window.App.showSuccess('角色已删除');
+      loadCharacters();
+    }).catch(function (err) {
+      window.App.showError('删除失败', err.message || '删除角色出错');
+    });
+  });
+
+  // ==================== 导出单角色 ====================
+
+  function exportCharacterImage(id) {
+    window.App.db.getCharacter(id).then(function (c) {
+      if (!c || !c.pixelImage) {
+        window.App.showError('导出失败', '未找到角色像素图');
+        return;
+      }
+      var link = document.createElement('a');
+      link.download = 'character-' + (c.name || 'pixel') + '.png';
+      link.href = c.pixelImage;
+      link.click();
+    });
+  }
+
+  // ==================== 工具函数 ====================
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ==================== 场景库渲染 ====================
+
+  var sceneGrid = document.getElementById('scene-grid');
+
+  function loadScenes() {
+    var scenes = window.App.scene.getAll();
+    if (scenes.length === 0) {
+      sceneGrid.innerHTML = '<p class="col-span-full text-center text-secondary py-12">暂无场景，请先在"场景编辑"页创建</p>';
+      return;
+    }
+
+    var templateNames = {
+      'grid': '纯色网格',
+      'living-room': '温馨客厅',
+      'grassland': '绿色草地',
+      'beach': '阳光海滩'
+    };
+
+    var html = '';
+    scenes.sort(function (a, b) {
+      return new Date(b.updatedAt) - new Date(a.updatedAt);
+    });
+
+    scenes.forEach(function (s) {
+      var tplName = templateNames[s.template] || s.template;
+      var date = new Date(s.updatedAt).toLocaleDateString('zh-CN');
+      html += ''
+        + '<div class="bg-bgLight rounded-lg border border-border overflow-hidden hover:shadow-md transition-shadow">'
+        + '  <div class="h-28 bg-white flex items-center justify-center border-b border-border">'
+        + '    <span class="text-3xl">🎬</span>'
+        + '  </div>'
+        + '  <div class="p-3">'
+        + '    <h4 class="font-medium text-sm truncate" title="' + escapeHtml(s.name) + '">' + escapeHtml(s.name) + '</h4>'
+        + '    <p class="text-xs text-secondary mt-1">' + tplName + ' · ' + (s.characterCount || 0) + ' 个角色</p>'
+        + '    <p class="text-xs text-disabled mt-0.5">' + date + '</p>'
+        + '    <div class="flex space-x-1 mt-2">'
+        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors scene-edit-btn" data-id="' + s.id + '">编辑</button>'
+        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors scene-rename-btn" data-id="' + s.id + '">重命名</button>'
+        + '      <button class="px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors scene-delete-btn" data-id="' + s.id + '">删</button>'
+        + '    </div>'
+        + '  </div>'
+        + '</div>';
+    });
+
+    sceneGrid.innerHTML = html;
+
+    // 绑定编辑按钮
+    sceneGrid.querySelectorAll('.scene-edit-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        window.App.scene.loadById(this.getAttribute('data-id'));
+      });
+    });
+
+    // 绑定重命名按钮
+    sceneGrid.querySelectorAll('.scene-rename-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = this.getAttribute('data-id');
+        var scenes = window.App.scene.getAll();
+        var found = null;
+        for (var i = 0; i < scenes.length; i++) {
+          if (scenes[i].id === id) { found = scenes[i]; break; }
+        }
+        if (!found) return;
+        var newName = prompt('请输入新名称：', found.name);
+        if (!newName || !newName.trim()) return;
+        window.App.scene.rename(id, newName.trim());
+        window.App.showSuccess('场景已重命名');
+        loadScenes();
+      });
+    });
+
+    // 绑定删除按钮
+    sceneGrid.querySelectorAll('.scene-delete-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = this.getAttribute('data-id');
+        var scenes = window.App.scene.getAll();
+        var found = null;
+        for (var i = 0; i < scenes.length; i++) {
+          if (scenes[i].id === id) { found = scenes[i]; break; }
+        }
+        if (!found) return;
+        if (!confirm('确定要删除场景「' + found.name + '」吗？此操作不可撤销。')) return;
+        window.App.scene.delete(id);
+        window.App.showSuccess('场景已删除');
+        loadScenes();
+      });
+    });
+  }
+
+  // ==================== 暴露API ====================
+
+  // ==================== ESC 关闭编辑/删除弹窗 ====================
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (!editModal.classList.contains('hidden')) closeEditModal();
+      if (!deleteModal.classList.contains('hidden')) closeDeleteModal();
+    }
+  });
+
+  // ==================== 暴露API ====================
+
+  window.App.loadCharacters = loadCharacters;
+  window.App.loadScenes = loadScenes;
+  window.App.switchTab = switchTab;
+
+})();

@@ -1,0 +1,228 @@
+/* ========================================
+   Character Land — 自定义样式
+   补充 Tailwind CSS 未覆盖的样式需求
+   ======================================== */
+
+/* ---------- Tab按钮激活态 ---------- */
+.tab-active {
+  background-color: #212121;
+  color: #ffffff;
+}
+.tab-active:hover {
+  background-color: rgba(33, 33, 33, 0.9);
+}
+
+/* ---------- 画布网格背景 ---------- */
+.canvas-grid {
+  background-image:
+    linear-gradient(#E0E0E0 1px, transparent 1px),
+    linear-gradient(90deg, #E0E0E0 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* ---------- 可拖拽元素 ---------- */
+.draggable {
+  cursor: move;
+  user-select: none;
+}
+
+/* ---------- 上传区域 ---------- */
+.upload-area-drag-over {
+  border-color: #212121 !important;
+  background-color: #F5F5F5;
+}
+
+/* ---------- 页面切换动画 ---------- */
+.page-section {
+  animation: fadeSlideIn 0.2s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- 模态框动画 ---------- */
+#error-modal:not(.hidden),
+#success-modal:not(.hidden),
+#edit-modal:not(.hidden),
+#delete-modal:not(.hidden) {
+  animation: modalFadeIn 0.15s ease-out;
+}
+
+#error-modal:not(.hidden) > div,
+#success-modal:not(.hidden) > div,
+#edit-modal:not(.hidden) > div,
+#delete-modal:not(.hidden) > div {
+  animation: modalScaleIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ---------- 像素图渲染 ---------- */
+.pixel-art {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* ---------- 场景角色卡片 ---------- */
+.scene-char-item {
+  will-change: transform;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.scene-char-item:active {
+  transform: scale(0.95);
+}
+
+/* ---------- 场景模板卡片 ---------- */
+.scene-template-item {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ---------- 角色库卡片 ---------- */
+#character-grid > div {
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+#character-grid > div:hover {
+  transform: translateY(-1px);
+}
+
+/* ---------- Canvas 拖拽态 ---------- */
+#scene-canvas {
+  cursor: default;
+  will-change: contents;
+}
+
+/* ---------- 加载动画 ---------- */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+/* ---------- 移动端提示横幅 ---------- */
+#mobile-banner {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; }
+  to   { max-height: 60px; opacity: 1; padding-top: 8px; padding-bottom: 8px; }
+}
+
+/* ---------- 按钮过渡 ---------- */
+button {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+/* ---------- 输入框聚焦增强 ---------- */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* ---------- 开关组件 (Toggle Switch) ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.peer:checked ~ div {
+  background-color: #212121;
+}
+.peer:checked ~ div::after {
+  transform: translateX(100%);
+}
+
+/* ---------- 滚动条美化 ---------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #BDBDBD;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #757575;
+}
+
+/* ---------- 8.3 响应式微调 ---------- */
+@media (max-width: 1023px) {
+  header .max-w-7xl {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  main {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ---------- 手动裁剪弹窗 ---------- */
+#crop-canvas {
+  cursor: crosshair;
+  max-width: 100%;
+}
+#crop-container {
+  background-image:
+    linear-gradient(45deg, #E0E0E0 25%, transparent 25%),
+    linear-gradient(-45deg, #E0E0E0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #E0E0E0 75%),
+    linear-gradient(-45deg, transparent 75%, #E0E0E0 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+/* ---------- 分割进度条 ---------- */
+#seg-progress-bar {
+  transition: width 0.4s ease;
+}
+
+/* ---------- 提取结果标签动画 ---------- */
+#preview-container .bg-success {
+  animation: tagPopIn 0.3s ease-out;
+}
+
+@keyframes tagPopIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ---------- 透明棋盘格背景 ---------- */
+.checkerboard-bg {
+  background-image:
+    linear-gradient(45deg, #E0E0E0 25%, transparent 25%),
+    linear-gradient(-45deg, #E0E0E0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #E0E0E0 75%),
+    linear-gradient(-45deg, transparent 75%, #E0E0E0 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+/* ---------- 打印时隐藏UI ---------- */
+@media print {
+  header, footer, nav, button, #mobile-banner {
+    display: none !important;
+  }
+}
