@@ -20,13 +20,13 @@
         var start = Date.now();
         var check = setInterval(function () {
           if (removeBackgroundFn) { clearInterval(check); resolve(removeBackgroundFn); }
-          else if (Date.now() - start > 30000) { clearInterval(check); reject(new Error('模型加载超时')); }
+          else if (Date.now() - start > 30000) { clearInterval(check); reject(new Error(window.App.t('error.modelTimeout'))); }
         }, 200);
       });
     }
 
     modelLoading = true;
-    window.App.onSegProgress && window.App.onSegProgress({ stage: 'loading', message: '正在加载AI模型...', percent: 0 });
+    window.App.onSegProgress && window.App.onSegProgress({ stage: 'loading', message: window.App.t('seg.loading'), percent: 0 });
 
     return import(REMOVAL_CDN).then(function (mod) {
       removeBackgroundFn = mod.removeBackground;
@@ -53,7 +53,7 @@
   // ==================== 主体提取 ====================
 
   function extractSubject(imageBlob) {
-    window.App.onSegProgress && window.App.onSegProgress({ stage: 'extracting', message: '正在识别角色主体...', percent: 50 });
+    window.App.onSegProgress && window.App.onSegProgress({ stage: 'extracting', message: window.App.t('seg.extracting'), percent: 50 });
 
     return loadRemovalLibrary().then(function (removeBg) {
       return removeBg(imageBlob, {
@@ -62,7 +62,7 @@
         output: { format: 'image/png', quality: 1.0 }
       }).catch(function () {
         // GPU 失败，降级 CPU 重试
-        window.App.onSegProgress && window.App.onSegProgress({ stage: 'extracting', message: '正在用CPU重试...', percent: 50 });
+        window.App.onSegProgress && window.App.onSegProgress({ stage: 'extracting', message: window.App.t('seg.cpuRetry'), percent: 50 });
         return removeBg(imageBlob, {
           device: 'cpu',
           model: 'medium',
@@ -78,7 +78,7 @@
   // ==================== 裁剪透明边缘 ====================
 
   function cropToSubject(imageBlob) {
-    window.App.onSegProgress && window.App.onSegProgress({ stage: 'cropping', message: '正在裁剪角色区域...', percent: 80 });
+    window.App.onSegProgress && window.App.onSegProgress({ stage: 'cropping', message: window.App.t('seg.cropping'), percent: 80 });
 
     return new Promise(function (resolve, reject) {
       var img = new Image();
@@ -140,7 +140,7 @@
 
       img.onerror = function () {
         URL.revokeObjectURL(url);
-        reject(new Error('图片加载失败'));
+        reject(new Error(window.App.t('error.imgLoadFailed')));
       };
 
       img.src = url;
@@ -153,7 +153,7 @@
     return new Promise(function (resolve, reject) {
       var reader = new FileReader();
       reader.onload = function () { resolve(reader.result); };
-      reader.onerror = function () { reject(new Error('文件读取失败')); };
+      reader.onerror = function () { reject(new Error(window.App.t('error.fileReadFailed'))); };
       reader.readAsDataURL(blob);
     });
   }

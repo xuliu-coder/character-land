@@ -31,7 +31,7 @@
 
   window.App.onSegProgress = function (info) {
     segProgress.classList.remove('hidden');
-    segProgressText.textContent = info.message || '处理中...';
+    segProgressText.textContent = info.message || window.App.t('generate.processing');
     segProgressPct.textContent = (info.percent || 0) + '%';
     segProgressBar.style.width = (info.percent || 0) + '%';
     if (info.percent >= 100) {
@@ -79,13 +79,13 @@
 
   function handleFile(file) {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      window.App.showError('上传失败', '不支持的文件格式，请上传 JPG 或 PNG 格式的图片');
+      window.App.showError(window.App.t('error.uploadFailed'), window.App.t('error.fileFormat'));
       fileInput.value = '';
       return;
     }
 
     if (file.size > MAX_SIZE) {
-      window.App.showError('上传失败', '图片大小超过 5MB 限制，请压缩后重新上传');
+      window.App.showError(window.App.t('error.uploadFailed'), window.App.t('error.fileSize'));
       fileInput.value = '';
       return;
     }
@@ -93,7 +93,7 @@
     resetState();
     currentFile = file;
 
-    fileName.textContent = '已选择：' + file.name;
+    fileName.textContent = window.App.t('upload.selected') + file.name;
     fileName.classList.remove('hidden');
 
     generateBtn.disabled = false;
@@ -137,13 +137,13 @@
   generateBtn.addEventListener('click', function () {
     var file = window.App.getCurrentFile();
     if (!file) {
-      window.App.showError('生成失败', '请先上传角色图片');
+      window.App.showError(window.App.t('error.generateFailed'), window.App.t('error.noFile'));
       return;
     }
 
     var name = characterNameInput.value.trim();
     if (!name) {
-      window.App.showError('生成失败', '请输入角色名称');
+      window.App.showError(window.App.t('error.generateFailed'), window.App.t('error.noName'));
       characterNameInput.focus();
       return;
     }
@@ -160,23 +160,23 @@
 
   function showExtractingState(msg) {
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span>识别中...';
+    generateBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span>' + window.App.t('generate.recognizing');
     segProgress.classList.remove('hidden');
-    segProgressText.textContent = msg || '正在识别角色主体...';
+    segProgressText.textContent = msg || window.App.t('generate.recognizing');
     segProgressPct.textContent = '0%';
     segProgressBar.style.width = '0%';
   }
 
   function hideExtractingState() {
     generateBtn.disabled = false;
-    generateBtn.innerHTML = '生成像素形象';
+    generateBtn.innerHTML = window.App.t('generate.btn');
     segProgress.classList.add('hidden');
   }
 
   // ==================== Stage 1: 主体提取 ====================
 
   function doExtract(file) {
-    showExtractingState('正在加载AI模型...');
+    showExtractingState(window.App.t('seg.loading'));
 
     extractActions.classList.add('hidden');
     previewActions.classList.add('hidden');
@@ -226,14 +226,14 @@
       previewContainer.innerHTML = ''
         + '<div class="h-full flex items-center justify-center relative">'
         + '  <img src="' + scaledDataURL + '" alt="提取的角色主体" class="max-h-full max-w-full object-contain rounded">'
-        + '  <span class="absolute top-1 left-1 bg-success text-white text-xs px-2 py-1 rounded-full">角色已识别</span>'
+        + '  <span class="absolute top-1 left-1 bg-success text-white text-xs px-2 py-1 rounded-full">' + window.App.t('preview.extracted') + '</span>'
         + '</div>';
     };
     img.src = dataURL;
 
     extractActions.classList.remove('hidden');
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '生成像素形象';
+    generateBtn.innerHTML = window.App.t('generate.btn');
   }
 
   function showExtractFailOptions() {
@@ -241,8 +241,8 @@
     previewContainer.innerHTML = ''
       + '<div class="flex flex-col items-center justify-center h-full text-center space-y-3">'
       + '  <span class="text-2xl">🤔</span>'
-      + '  <p class="text-secondary text-sm">自动识别未成功</p>'
-      + '  <p class="text-xs text-disabled">请尝试手动框选角色区域，或重新上传图片</p>'
+      + '  <p class="text-secondary text-sm">' + window.App.t('preview.extractFail') + '</p>'
+      + '  <p class="text-xs text-disabled">' + window.App.t('preview.extractFailHint') + '</p>'
       + '</div>';
 
     extractActions.classList.remove('hidden');
@@ -251,22 +251,22 @@
     manualCropBtn.classList.remove('hidden');
     reuploadBtn.classList.remove('hidden');
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '生成像素形象';
+    generateBtn.innerHTML = window.App.t('generate.btn');
   }
 
   // ==================== Stage 2: 像素化 ====================
 
   function doPixelate() {
     if (!extractedBlob) {
-      window.App.showError('生成失败', '请先完成角色提取');
+      window.App.showError(window.App.t('error.generateFailed'), window.App.t('error.noExtraction'));
       return;
     }
 
     // 显示加载状态
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span>像素化中...';
+    generateBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span>' + window.App.t('generate.pixelating');
     previewPlaceholder.classList.remove('hidden');
-    previewPlaceholder.textContent = '正在生成像素形象...';
+    previewPlaceholder.textContent = window.App.t('generate.inProgress');
     previewContainer.innerHTML = '';
     previewContainer.appendChild(previewPlaceholder);
     extractActions.classList.add('hidden');
@@ -281,12 +281,12 @@
         // result = { dataURL, mode, outputSize, palette }
         displayPixelResult(result);
         generateBtn.disabled = false;
-        generateBtn.innerHTML = '生成像素形象';
+        generateBtn.innerHTML = window.App.t('generate.btn');
       })
       .catch(function (err) {
         generateBtn.disabled = false;
-        generateBtn.innerHTML = '生成像素形象';
-        previewPlaceholder.textContent = '上传图片后生成像素小人预览';
+        generateBtn.innerHTML = window.App.t('generate.btn');
+        previewPlaceholder.textContent = window.App.t('preview.placeholder');
 
         window.App.analytics.track('character_generate_fail', {
           error_type: err && err.code === 'SUBJECT_TOO_SMALL' ? 'subject_too_small' : 'pixelate_error'
@@ -305,7 +305,7 @@
             + '  <p class="text-sm text-error font-medium">' + err.message + '</p>'
             + '</div>';
         } else {
-          window.App.showError('生成失败', '像素化处理出错，请重试', function () {
+          window.App.showError(window.App.t('error.generateFailed'), window.App.t('error.pixelateError'), function () {
             doPixelate();
           });
           extractActions.classList.remove('hidden');
@@ -405,7 +405,7 @@
     } else if (currentFile) {
       doExtract(currentFile);
     } else {
-      window.App.showError('生成失败', '请先上传角色图片');
+      window.App.showError(window.App.t('error.generateFailed'), window.App.t('error.noFile'));
     }
   });
 
@@ -413,13 +413,13 @@
 
   confirmSaveBtn.addEventListener('click', function () {
     if (!lastPixelResult) {
-      window.App.showError('保存失败', '没有可保存的像素形象');
+      window.App.showError(window.App.t('error.saveFailed'), window.App.t('error.noPixelResult'));
       return;
     }
 
     var name = characterNameInput.value.trim();
     if (!name) {
-      window.App.showError('保存失败', '角色名称不能为空');
+      window.App.showError(window.App.t('error.saveFailed'), window.App.t('error.nameRequired'));
       return;
     }
 
@@ -439,7 +439,7 @@
       };
 
       window.App.db.saveCharacter(data).then(function () {
-        window.App.showSuccess('角色 "' + name + '" 已保存到角色库');
+        window.App.showSuccess(window.App.t('success.charSaved', name));
         window.App.analytics.track('character_save', {
           has_source: !!data.source,
           has_description: !!data.description,
@@ -454,7 +454,7 @@
         document.getElementById('character-desc').value = '';
         document.getElementById('character-quote').value = '';
       }).catch(function (err) {
-        window.App.showError('保存失败', err.message || '数据存储出错，请重试');
+        window.App.showError(window.App.t('error.saveFailed'), err.message || window.App.t('error.storageError'));
       });
     };
     originalReader.readAsDataURL(currentFile);
@@ -464,7 +464,7 @@
 
   exportSingleBtn.addEventListener('click', function () {
     if (!lastPixelResult) {
-      window.App.showError('导出失败', '没有可导出的像素形象');
+      window.App.showError(window.App.t('error.exportFailed'), window.App.t('error.noPixelExport'));
       return;
     }
     window.App.analytics.track('character_export');
@@ -472,7 +472,7 @@
     link.download = 'character-pixel-' + Date.now() + '.png';
     link.href = lastPixelResult;
     link.click();
-    window.App.showSuccess('单角色图片已导出');
+    window.App.showSuccess(window.App.t('success.singleExport'));
   });
 
   // ==================== 手动裁剪弹窗 ====================
@@ -551,7 +551,7 @@
 
   cropConfirmBtn.addEventListener('click', function () {
     if (!cropRect || cropRect.w < 10 || cropRect.h < 10) {
-      window.App.showError('裁剪失败', '请拖拽框选更大的区域');
+      window.App.showError(window.App.t('error.cropFailed'), window.App.t('error.cropTooSmall'));
       return;
     }
 
@@ -595,7 +595,7 @@
     manualCropBtn.classList.remove('hidden');
     reuploadBtn.classList.remove('hidden');
     segProgress.classList.add('hidden');
-    generateBtn.innerHTML = '生成像素形象';
+    generateBtn.innerHTML = window.App.t('generate.btn');
     generateBtn.disabled = true;
   }
 
@@ -611,7 +611,7 @@
     fileInput.value = '';
     fileName.classList.add('hidden');
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '生成像素形象';
+    generateBtn.innerHTML = window.App.t('generate.btn');
     previewContainer.innerHTML = '';
     previewContainer.appendChild(previewPlaceholder);
     previewPlaceholder.classList.remove('hidden');

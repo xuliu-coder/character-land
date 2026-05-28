@@ -139,7 +139,7 @@
       localStorage.setItem(getLSKey(storeName), JSON.stringify(items));
       return Promise.resolve();
     } catch (e) {
-      return Promise.reject(new Error('存储空间不足，请清理旧数据'));
+      return Promise.reject(new Error(window.App.t('storage.spaceLow')));
     }
   }
 
@@ -201,7 +201,7 @@
 
   function updateCharacter(id, data) {
     return getCharacter(id).then(function (character) {
-      if (!character) throw new Error('角色不存在');
+      if (!character) throw new Error(window.App.t('error.charNotFound'));
       var updated = Object.assign({}, character, data, {
         id: id,
         updatedAt: new Date().toISOString()
@@ -230,7 +230,7 @@
           if (pct > 80) {
             return {
               warning: true,
-              message: '存储空间已使用 ' + pct + '%，建议清理旧数据以保证正常使用',
+              message: window.App.t('storage.spaceUsed', pct),
               usage: usage,
               quota: quota,
               percent: pct

@@ -504,20 +504,20 @@
   function updatePropsPanel() {
     var p = placements.find(function (pl) { return pl.id === selectedId; });
     if (!p) {
-      propsPanel.innerHTML = '<p class="text-xs text-secondary text-center py-8">点击画布上的角色查看属性</p>';
+      propsPanel.innerHTML = '<p class="text-xs text-secondary text-center py-8">' + window.App.t('scene.propsEmpty') + '</p>';
       return;
     }
 
     var charData = characterCache[p.characterId];
-    var name = charData ? charData.name : '未知角色';
+    var name = charData ? charData.name : window.App.t('property.unknown');
 
     propsPanel.innerHTML = ''
       + '<div>'
-      + '  <label class="block text-secondary mb-1 text-xs">名称</label>'
+      + '  <label class="block text-secondary mb-1 text-xs">' + window.App.t('property.name') + '</label>'
       + '  <p class="text-sm font-medium truncate">' + escapeHtml(name) + '</p>'
       + '</div>'
       + '<div>'
-      + '  <label class="block text-secondary mb-1 text-xs">位置</label>'
+      + '  <label class="block text-secondary mb-1 text-xs">' + window.App.t('property.position') + '</label>'
       + '  <div class="grid grid-cols-2 gap-2">'
       + '    <div><span class="text-secondary text-xs">X:</span>'
       + '      <input type="number" id="prop-x" value="' + Math.round(p.x) + '" class="w-full px-2 py-1 border border-border rounded text-xs" min="0" max="' + CANVAS_W + '">'
@@ -528,16 +528,16 @@
       + '  </div>'
       + '</div>'
       + '<div>'
-      + '  <label class="block text-secondary mb-1 text-xs">旋转 (' + Math.round(p.rotation || 0) + '°)</label>'
+      + '  <label class="block text-secondary mb-1 text-xs">' + window.App.t('property.rotation') + ' (' + Math.round(p.rotation || 0) + '°)</label>'
       + '  <input type="range" id="prop-rotation" value="' + (p.rotation || 0) + '" min="0" max="360" class="w-full">'
       + '</div>'
       + '<div>'
-      + '  <label class="block text-secondary mb-1 text-xs">缩放 (' + Math.round((p.scale || 1) * 100) + '%)</label>'
+      + '  <label class="block text-secondary mb-1 text-xs">' + window.App.t('property.scale') + ' (' + Math.round((p.scale || 1) * 100) + '%)</label>'
       + '  <input type="range" id="prop-scale" value="' + ((p.scale || 1) * 100) + '" min="50" max="200" class="w-full">'
       + '</div>'
       + '<div class="flex space-x-2">'
-      + '  <button id="prop-up" class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight">置顶</button>'
-      + '  <button id="prop-down" class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight">置底</button>'
+      + '  <button id="prop-up" class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight">' + window.App.t('property.up') + '</button>'
+      + '  <button id="prop-down" class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight">' + window.App.t('property.down') + '</button>'
       + '</div>';
 
     // 绑定属性面板事件
@@ -664,12 +664,12 @@
 
   document.getElementById('save-scene-btn').addEventListener('click', function () {
     if (placements.length === 0) {
-      window.App.showError('保存失败', '场景中没有角色，请先从左侧拖入角色');
+      window.App.showError(window.App.t('error.saveFailed'), window.App.t('error.noSceneChars'));
       return;
     }
 
-    var defaultName = '场景 ' + new Date().toLocaleDateString('zh-CN');
-    var name = prompt('请输入场景名称：', defaultName);
+    var defaultName = window.App.t('prompt.defaultSceneName') + new Date().toLocaleDateString(window.App.getLocale());
+    var name = prompt(window.App.t('prompt.sceneName'), defaultName);
     if (!name || !name.trim()) return;
     name = name.trim();
 
@@ -695,7 +695,7 @@
       }
     }
     if (existingIdx >= 0) {
-      if (!confirm('已存在同名场景「' + name + '」，是否覆盖？')) return;
+      if (!confirm(window.App.t('confirm.sceneOverwrite', name))) return;
       sceneData.id = scenes[existingIdx].id;
       sceneData.createdAt = scenes[existingIdx].createdAt;
       scenes[existingIdx] = sceneData;
@@ -704,7 +704,7 @@
     }
 
     saveAllScenes(scenes);
-    window.App.showSuccess('场景「' + name + '」已保存');
+    window.App.showSuccess(window.App.t('success.sceneSaved', name));
     window.App.analytics.track('scene_save', {
       character_count: placements.length,
       template: currentTemplate
@@ -713,7 +713,7 @@
 
   document.getElementById('new-scene-btn').addEventListener('click', function () {
     if (placements.length > 0) {
-      if (!confirm('创建新场景将清除当前画布上的所有角色，是否继续？')) return;
+      if (!confirm(window.App.t('confirm.newScene'))) return;
     }
     window.App.analytics.track('scene_create');
     pushHistory();
@@ -741,7 +741,7 @@
       if (scenes[i].id === id) { found = scenes[i]; break; }
     }
     if (!found) {
-      window.App.showError('加载失败', '场景不存在');
+      window.App.showError(window.App.t('error.loadFailed'), window.App.t('error.sceneNotFound'));
       return;
     }
 
@@ -804,7 +804,7 @@
 
     var exportBtn = this;
     exportBtn.disabled = true;
-    exportBtn.textContent = '导出中...';
+    exportBtn.textContent = window.App.t('scene.exporting');
 
     // 先预加载所有角色图片，避免导出时出现灰色占位框
     preloadAllPlacementImages().then(function () {
@@ -834,12 +834,12 @@
       link.download = 'character-land-scene-' + Date.now() + '.png';
       link.href = exportCanvas.toDataURL('image/png');
       link.click();
-      window.App.showSuccess('场景图片已导出');
+      window.App.showSuccess(window.App.t('success.sceneExported'));
     }).catch(function () {
-      window.App.showError('导出失败', '角色图片加载失败，请重试');
+      window.App.showError(window.App.t('error.exportFailed'), window.App.t('error.sceneImgLoad'));
     }).then(function () {
       exportBtn.disabled = false;
-      exportBtn.textContent = '导出场景图片';
+      exportBtn.textContent = window.App.t('scene.exportScene');
     });
   });
 
@@ -859,7 +859,7 @@
           };
           img.onerror = function () {
             charData._img = null;
-            reject(new Error('图片加载失败'));
+            reject(new Error(window.App.t('error.imgLoadFailed')));
           };
           img.src = charData.pixelImage;
         });
@@ -882,7 +882,7 @@
       characters.forEach(function (c) { characterCache[c.id] = c; });
 
       if (characters.length === 0) {
-        listEl.innerHTML = '<p class="col-span-2 text-xs text-secondary text-center py-4">暂无角色</p>';
+        listEl.innerHTML = '<p class="col-span-2 text-xs text-secondary text-center py-4">' + window.App.t('scene.emptyCharList') + '</p>';
         return;
       }
 

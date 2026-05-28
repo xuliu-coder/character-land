@@ -21,8 +21,8 @@
   var retryCallback = null;
 
   function showError(title, message, onRetry) {
-    errorTitle.textContent = title || '操作失败';
-    errorMessage.textContent = message || '发生未知错误，请重试';
+    errorTitle.textContent = title || window.App.t('error.generic');
+    errorMessage.textContent = message || window.App.t('error.unknown');
     retryCallback = onRetry || null;
 
     if (retryCallback) {
@@ -69,7 +69,7 @@
   // ==================== 成功弹窗 ====================
 
   function showSuccess(message) {
-    successMessage.textContent = message || '操作成功';
+    successMessage.textContent = message || window.App.t('success.generic');
     successModal.classList.remove('hidden');
   }
 

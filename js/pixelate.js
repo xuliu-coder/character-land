@@ -96,13 +96,13 @@
       img.onload = function () {
         var result = loadImageToFitCanvas(img, TARGET_SIZE);
         if (!result) {
-          reject(new Error('未检测到角色主体'));
+          reject(new Error(window.App.t('error.noSubject')));
           return;
         }
         resolve(result.canvas.toDataURL('image/png'));
       };
       img.onerror = function () {
-        reject(new Error('图片加载失败'));
+        reject(new Error(window.App.t('error.imgLoadFailed')));
       };
       img.src = imageSource;
     });
@@ -114,13 +114,13 @@
       img.onload = function () {
         var result = loadImageToFitCanvas(img, TARGET_SIZE);
         if (!result) {
-          reject(new Error('未检测到角色主体'));
+          reject(new Error(window.App.t('error.noSubject')));
           return;
         }
         resolve(result.ctx.getImageData(0, 0, TARGET_SIZE, TARGET_SIZE));
       };
       img.onerror = function () {
-        reject(new Error('图片加载失败'));
+        reject(new Error(window.App.t('error.imgLoadFailed')));
       };
       img.src = imageSource;
     });
@@ -1132,7 +1132,7 @@
       sourcePromise = new Promise(function (resolve, reject) {
         var reader = new FileReader();
         reader.onload = function () { resolve(reader.result); };
-        reader.onerror = function () { reject(new Error('Blob 读取失败')); };
+        reader.onerror = function () { reject(new Error(window.App.t('error.blobReadFailed'))); };
         reader.readAsDataURL(imageSource);
       });
     } else {
@@ -1149,7 +1149,7 @@
       var complexity = analyzeImageComplexity(imageData);
 
       if (complexity.level === 'error') {
-        var err = new Error('当前图片较复杂，建议上传单人正面图、纯色背景图，或先手动框选角色主体。');
+        var err = new Error(window.App.t('error.complexImage'));
         err.code = 'SUBJECT_TOO_SMALL';
         throw err;
       }

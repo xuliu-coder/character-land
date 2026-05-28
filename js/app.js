@@ -33,7 +33,7 @@
     window.App.db.checkStorageSpace().then(function (result) {
       if (result.warning) {
         setTimeout(function () {
-          window.App.showError('存储空间提醒', result.message);
+          window.App.showError(window.App.t('storage.title'), result.message);
         }, 500);
       }
     });
@@ -60,7 +60,10 @@
   // ==================== Tab 切换 ====================
 
   function switchTab(tabName) {
-    var titles = { character: '角色生成', scene: '场景编辑', resource: '资源管理' };
+    var titles = {};
+    titles.character = window.App.t('tab.character');
+    titles.scene = window.App.t('tab.scene');
+    titles.resource = window.App.t('tab.resource');
     window.App.analytics.trackPageView(titles[tabName] || tabName);
     window.App.analytics.track('tab_switch', { tab: tabName });
 
@@ -129,7 +132,7 @@
       updateSourceFilter(characters);
       renderCharacterGrid(characters);
     }).catch(function () {
-      characterGrid.innerHTML = '<p class="col-span-full text-center text-error py-12">加载角色失败，请刷新页面重试</p>';
+      characterGrid.innerHTML = '<p class="col-span-full text-center text-error py-12">' + window.App.t('resource.loadError') + '</p>';
     });
   }
 
@@ -142,7 +145,7 @@
     });
 
     var currentValue = filterSelect.value;
-    filterSelect.innerHTML = '<option value="">全部出处</option>';
+    filterSelect.innerHTML = '<option value="">' + window.App.t('resource.allSources') + '</option>';
     sources.forEach(function (s) {
       var selected = s === currentValue ? ' selected' : '';
       filterSelect.innerHTML += '<option value="' + escapeHtml(s) + '"' + selected + '>' + escapeHtml(s) + '</option>';
@@ -161,10 +164,10 @@
   }
 
   function renderCharacterGrid(characters) {
-    characterCount.textContent = '共 ' + characters.length + ' 个角色';
+    characterCount.textContent = window.App.t('resource.characterCount', characters.length);
 
     if (characters.length === 0) {
-      characterGrid.innerHTML = '<p class="col-span-full text-center text-secondary py-12">暂无角色，请先在"角色生成"页创建</p>';
+      characterGrid.innerHTML = '<p class="col-span-full text-center text-secondary py-12">' + window.App.t('resource.noCharacters') + '</p>';
       return;
     }
 
@@ -177,11 +180,11 @@
         + '  </div>'
         + '  <div class="p-3">'
         + '    <h4 class="font-medium text-sm truncate" title="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</h4>'
-        + '    <p class="text-xs text-secondary mb-2 truncate">' + (c.source ? '出处：' + escapeHtml(c.source) : '未设出处') + '</p>'
+        + '    <p class="text-xs text-secondary mb-2 truncate">' + (c.source ? window.App.t('resource.source') + escapeHtml(c.source) : window.App.t('resource.noSource')) + '</p>'
         + '    <div class="flex space-x-1">'
-        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors edit-btn" data-id="' + c.id + '">编辑</button>'
-        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors export-btn" data-id="' + c.id + '">导出</button>'
-        + '      <button class="px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors delete-btn" data-id="' + c.id + '">删</button>'
+        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors edit-btn" data-id="' + c.id + '">' + window.App.t('resource.edit') + '</button>'
+        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors export-btn" data-id="' + c.id + '">' + window.App.t('resource.export') + '</button>'
+        + '      <button class="px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors delete-btn" data-id="' + c.id + '">' + window.App.t('resource.delete') + '</button>'
         + '    </div>'
         + '  </div>'
         + '</div>';
@@ -235,7 +238,7 @@
   function openEditModal(id) {
     window.App.db.getCharacter(id).then(function (c) {
       if (!c) {
-        window.App.showError('编辑失败', '角色不存在');
+        window.App.showError(window.App.t('error.editFailed'), window.App.t('error.charNotFound'));
         return;
       }
       currentEditId = id;
@@ -261,7 +264,7 @@
   document.getElementById('edit-save-btn').addEventListener('click', function () {
     var name = editName.value.trim();
     if (!name) {
-      window.App.showError('保存失败', '角色名称不能为空');
+      window.App.showError(window.App.t('error.saveFailed'), window.App.t('error.nameRequired'));
       return;
     }
 
@@ -272,11 +275,11 @@
       quote: editQuote.value.trim()
     }).then(function () {
       closeEditModal();
-      window.App.showSuccess('角色 "' + name + '" 信息已更新');
+      window.App.showSuccess(window.App.t('success.charUpdated', name));
       window.App.analytics.track('character_edit');
       loadCharacters();
     }).catch(function (err) {
-      window.App.showError('保存失败', err.message || '更新角色信息出错');
+      window.App.showError(window.App.t('error.saveFailed'), err.message || window.App.t('error.updateFailed'));
     });
   });
 
@@ -291,7 +294,7 @@
       if (!c) return;
       currentDeleteId = id;
       deleteId.value = id;
-      deleteMessage.textContent = '确定要删除角色 "' + c.name + '" 吗？此操作不可撤销。';
+      deleteMessage.textContent = window.App.t('delete.charConfirm', c.name);
       deleteModal.classList.remove('hidden');
     });
   }
@@ -311,11 +314,11 @@
 
     window.App.db.deleteCharacter(currentDeleteId).then(function () {
       closeDeleteModal();
-      window.App.showSuccess('角色已删除');
+      window.App.showSuccess(window.App.t('success.charDeleted'));
       window.App.analytics.track('character_delete');
       loadCharacters();
     }).catch(function (err) {
-      window.App.showError('删除失败', err.message || '删除角色出错');
+      window.App.showError(window.App.t('error.deleteFailed'), err.message || window.App.t('error.deleteCharFailed'));
     });
   });
 
@@ -324,7 +327,7 @@
   function exportCharacterImage(id) {
     window.App.db.getCharacter(id).then(function (c) {
       if (!c || !c.pixelImage) {
-        window.App.showError('导出失败', '未找到角色像素图');
+        window.App.showError(window.App.t('error.exportFailed'), window.App.t('error.noPixelFound'));
         return;
       }
       window.App.analytics.track('character_export');
@@ -350,15 +353,15 @@
   function loadScenes() {
     var scenes = window.App.scene.getAll();
     if (scenes.length === 0) {
-      sceneGrid.innerHTML = '<p class="col-span-full text-center text-secondary py-12">暂无场景，请先在"场景编辑"页创建</p>';
+      sceneGrid.innerHTML = '<p class="col-span-full text-center text-secondary py-12">' + window.App.t('resource.noScenes') + '</p>';
       return;
     }
 
     var templateNames = {
-      'grid': '纯色网格',
-      'living-room': '温馨客厅',
-      'grassland': '绿色草地',
-      'beach': '阳光海滩'
+      'grid': window.App.t('template.grid'),
+      'living-room': window.App.t('template.living-room'),
+      'grassland': window.App.t('template.grassland'),
+      'beach': window.App.t('template.beach')
     };
 
     var html = '';
@@ -368,7 +371,7 @@
 
     scenes.forEach(function (s) {
       var tplName = templateNames[s.template] || s.template;
-      var date = new Date(s.updatedAt).toLocaleDateString('zh-CN');
+      var date = new Date(s.updatedAt).toLocaleDateString(window.App.getLocale());
       html += ''
         + '<div class="bg-bgLight rounded-lg border border-border overflow-hidden hover:shadow-md transition-shadow">'
         + '  <div class="h-28 bg-white flex items-center justify-center border-b border-border">'
@@ -376,12 +379,12 @@
         + '  </div>'
         + '  <div class="p-3">'
         + '    <h4 class="font-medium text-sm truncate" title="' + escapeHtml(s.name) + '">' + escapeHtml(s.name) + '</h4>'
-        + '    <p class="text-xs text-secondary mt-1">' + tplName + ' · ' + (s.characterCount || 0) + ' 个角色</p>'
+        + '    <p class="text-xs text-secondary mt-1">' + tplName + ' · ' + window.App.t('resource.charsCount', (s.characterCount || 0)) + '</p>'
         + '    <p class="text-xs text-disabled mt-0.5">' + date + '</p>'
         + '    <div class="flex space-x-1 mt-2">'
-        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors scene-edit-btn" data-id="' + s.id + '">编辑</button>'
-        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors scene-rename-btn" data-id="' + s.id + '">重命名</button>'
-        + '      <button class="px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors scene-delete-btn" data-id="' + s.id + '">删</button>'
+        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors scene-edit-btn" data-id="' + s.id + '">' + window.App.t('resource.edit') + '</button>'
+        + '      <button class="flex-1 px-2 py-1 bg-white border border-border rounded text-xs hover:bg-bgLight transition-colors scene-rename-btn" data-id="' + s.id + '">' + window.App.t('resource.rename') + '</button>'
+        + '      <button class="px-2 py-1 bg-white text-error border border-error rounded text-xs hover:bg-error hover:text-white transition-colors scene-delete-btn" data-id="' + s.id + '">' + window.App.t('resource.delete') + '</button>'
         + '    </div>'
         + '  </div>'
         + '</div>';
@@ -406,10 +409,10 @@
           if (scenes[i].id === id) { found = scenes[i]; break; }
         }
         if (!found) return;
-        var newName = prompt('请输入新名称：', found.name);
+        var newName = prompt(window.App.t('prompt.rename'), found.name);
         if (!newName || !newName.trim()) return;
         window.App.scene.rename(id, newName.trim());
-        window.App.showSuccess('场景已重命名');
+        window.App.showSuccess(window.App.t('success.sceneRenamed'));
         loadScenes();
       });
     });
@@ -424,9 +427,9 @@
           if (scenes[i].id === id) { found = scenes[i]; break; }
         }
         if (!found) return;
-        if (!confirm('确定要删除场景「' + found.name + '」吗？此操作不可撤销。')) return;
+        if (!confirm(window.App.t('delete.sceneConfirm', found.name))) return;
         window.App.scene.delete(id);
-        window.App.showSuccess('场景已删除');
+        window.App.showSuccess(window.App.t('success.sceneDeleted'));
         loadScenes();
       });
     });

@@ -226,3 +226,36 @@ input:focus, textarea:focus, select:focus {
     display: none !important;
   }
 }
+
+/* ---------- 语言切换器 ---------- */
+#lang-switcher {
+  display: flex;
+  align-items: center;
+}
+
+#lang-toggle {
+  white-space: nowrap;
+}
+
+#lang-toggle:hover svg {
+  color: #212121;
+}
+
+.lang-dropdown-anim {
+  animation: langDropdownIn 0.12s ease-out;
+  transform-origin: top right;
+}
+
+@keyframes langDropdownIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.lang-option {
+  cursor: pointer;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.lang-option:hover {
+  background-color: #F5F5F5;
+}

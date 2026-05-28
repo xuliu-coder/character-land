@@ -41,8 +41,8 @@
 
   <!-- ==================== 移动端提示横幅 ==================== -->
   <div id="mobile-banner" class="hidden bg-yellow-50 border-b border-yellow-200 px-6 py-2 text-center text-sm text-secondary">
-    为获得完整体验，建议使用桌面端浏览器访问。当前移动端仅提供基础浏览功能。
-    <button class="ml-2 text-primary underline text-xs" onclick="this.parentElement.classList.add('hidden')">知道了</button>
+    <span data-i18n="mobile.banner">为获得完整体验，建议使用桌面端浏览器访问。当前移动端仅提供基础浏览功能。</span>
+    <button class="ml-2 text-primary underline text-xs" onclick="this.parentElement.classList.add('hidden')" data-i18n="mobile.dismiss">知道了</button>
   </div>
 
   <!-- ==================== 顶部导航栏 ==================== -->
@@ -50,18 +50,27 @@
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <span class="text-2xl">🏠</span>
-        <h1 class="text-xl font-bold tracking-tight">我的角色世界</h1>
+        <h1 class="text-xl font-bold tracking-tight" data-i18n="nav.title">我的角色世界</h1>
       </div>
       <nav class="flex space-x-1">
-        <button id="tab-character" class="tab-btn tab-active px-5 py-2.5 rounded-lg text-sm font-medium transition-colors" data-tab="character">
+        <button id="tab-character" class="tab-btn tab-active px-5 py-2.5 rounded-lg text-sm font-medium transition-colors" data-tab="character" data-i18n="tab.character">
           角色生成
         </button>
-        <button id="tab-scene" class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-bgLight transition-colors" data-tab="scene">
+        <button id="tab-scene" class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-bgLight transition-colors" data-tab="scene" data-i18n="tab.scene">
           场景编辑
         </button>
-        <button id="tab-resource" class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-bgLight transition-colors" data-tab="resource">
+        <button id="tab-resource" class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-bgLight transition-colors" data-tab="resource" data-i18n="tab.resource">
           资源管理
         </button>
+        <!-- 语言切换器 -->
+        <div class="relative ml-4" id="lang-switcher">
+          <button id="lang-toggle" class="px-3 py-2.5 rounded-lg text-sm font-medium text-secondary hover:text-primary hover:bg-bgLight transition-colors flex items-center space-x-1" title="Language">
+            <span class="text-sm mr-1" style="filter: grayscale(1); opacity: 0.55;">🌐</span><span id="lang-current" class="text-xs font-semibold">ZH</span>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          <div id="lang-dropdown" class="hidden absolute right-0 top-full mt-1 bg-white border border-border rounded-lg shadow-lg py-1 z-50 min-w-[140px] lang-dropdown-anim">
+          </div>
+        </div>
       </nav>
     </div>
   </header>
@@ -78,10 +87,10 @@
 
           <!-- 图片上传区域 -->
           <div class="mb-6">
-            <label class="block text-sm text-secondary mb-2">上传角色图片 <span class="text-error">*</span></label>
+            <label class="block text-sm text-secondary mb-2"><span data-i18n="upload.label">上传角色图片</span> <span class="text-error">*</span></label>
             <div id="upload-area" class="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors">
-              <p class="text-secondary mb-1">拖拽或点击选择文件</p>
-              <p class="text-xs text-disabled">支持 JPG / PNG 格式，最大 5MB</p>
+              <p class="text-secondary mb-1" data-i18n="upload.dropHint">拖拽或点击选择文件</p>
+              <p class="text-xs text-disabled" data-i18n="upload.formatHint">支持 JPG / PNG 格式，最大 5MB</p>
               <input type="file" id="file-input" accept="image/jpeg,image/png" class="hidden">
             </div>
             <p id="file-name" class="mt-2 text-sm text-secondary hidden"></p>
@@ -90,40 +99,40 @@
           <!-- 角色信息表单 -->
           <div class="space-y-4">
             <div>
-              <label for="character-name" class="block text-sm text-secondary mb-1">角色名称 <span class="text-error">*</span></label>
-              <input type="text" id="character-name" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow" placeholder="输入角色名称，如：钟离、Iron Man">
+              <label for="character-name" class="block text-sm text-secondary mb-1"><span data-i18n="form.name">角色名称</span> <span class="text-error">*</span></label>
+              <input type="text" id="character-name" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow" data-i18n-placeholder="form.namePlaceholder" placeholder="输入角色名称，如：孙悟空、Iron Man、木之本樱">
             </div>
             <div>
-              <label for="character-source" class="block text-sm text-secondary mb-1">角色出处</label>
-              <input type="text" id="character-source" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow" placeholder="如：《原神》《复仇者联盟》">
+              <label for="character-source" class="block text-sm text-secondary mb-1" data-i18n="form.source">角色出处</label>
+              <input type="text" id="character-source" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow" data-i18n-placeholder="form.sourcePlaceholder" placeholder="如：《西游记》、《复仇者联盟》、《百变小樱》">
             </div>
             <div>
-              <label for="character-desc" class="block text-sm text-secondary mb-1">角色描述</label>
-              <textarea id="character-desc" rows="2" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow resize-none" placeholder="简单描述角色特点"></textarea>
+              <label for="character-desc" class="block text-sm text-secondary mb-1" data-i18n="form.description">角色描述</label>
+              <textarea id="character-desc" rows="2" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow resize-none" data-i18n-placeholder="form.descPlaceholder" placeholder="简单描述角色特点"></textarea>
             </div>
             <div>
-              <label for="character-quote" class="block text-sm text-secondary mb-1">经典台词</label>
-              <textarea id="character-quote" rows="2" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow resize-none" placeholder="角色的经典台词"></textarea>
+              <label for="character-quote" class="block text-sm text-secondary mb-1" data-i18n="form.quote">经典台词</label>
+              <textarea id="character-quote" rows="2" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow resize-none" data-i18n-placeholder="form.quotePlaceholder" placeholder="角色的经典台词"></textarea>
             </div>
           </div>
 
           <!-- 生成按钮 -->
-          <button id="generate-btn" class="w-full mt-6 bg-primary text-white py-3 rounded-lg font-medium hover:bg-opacity-90 transition-colors disabled:bg-disabled disabled:cursor-not-allowed" disabled>
+          <button id="generate-btn" class="w-full mt-6 bg-primary text-white py-3 rounded-lg font-medium hover:bg-opacity-90 transition-colors disabled:bg-disabled disabled:cursor-not-allowed" disabled data-i18n="generate.btn">
             生成像素形象
           </button>
         </div>
 
         <!-- 右侧：预览区 -->
         <div class="bg-bgLight rounded-lg p-6 border border-border">
-          <h2 class="text-lg font-semibold mb-4">像素形象预览</h2>
+          <h2 class="text-lg font-semibold mb-4" data-i18n="preview.title">像素形象预览</h2>
           <div id="preview-container" class="border border-border rounded-lg h-64 flex items-center justify-center checkerboard-bg mb-6">
-            <p id="preview-placeholder" class="text-secondary text-sm">上传图片后生成像素小人预览</p>
+            <p id="preview-placeholder" class="text-secondary text-sm" data-i18n="preview.placeholder">上传图片后生成像素小人预览</p>
           </div>
 
           <!-- 分割进度提示 -->
           <div id="seg-progress" class="hidden mb-4">
             <div class="flex items-center justify-between mb-2">
-              <span id="seg-progress-text" class="text-sm text-secondary">正在加载AI模型...</span>
+              <span id="seg-progress-text" class="text-sm text-secondary" data-i18n="seg.loading">正在加载AI模型...</span>
               <span id="seg-progress-pct" class="text-sm text-secondary">0%</span>
             </div>
             <div class="w-full bg-border rounded-full h-1.5 overflow-hidden">
@@ -133,22 +142,22 @@
 
           <!-- Stage1 操作按钮（提取完成后显示） -->
           <div id="extract-actions" class="hidden space-y-3">
-            <button id="confirm-extract-btn" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-opacity-90 transition-colors">
+            <button id="confirm-extract-btn" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-opacity-90 transition-colors" data-i18n="generate.extractConfirm">
               确认角色提取，生成像素形象
             </button>
-            <button id="manual-crop-btn" class="w-full bg-white text-primary border border-border py-2.5 rounded-lg font-medium hover:bg-bgLight transition-colors">
+            <button id="manual-crop-btn" class="w-full bg-white text-primary border border-border py-2.5 rounded-lg font-medium hover:bg-bgLight transition-colors" data-i18n="preview.manualCrop">
               手动调整选区
             </button>
-            <button id="reupload-btn" class="w-full bg-white text-error border border-error py-2.5 rounded-lg text-sm font-medium hover:bg-error hover:text-white transition-colors">
+            <button id="reupload-btn" class="w-full bg-white text-error border border-error py-2.5 rounded-lg text-sm font-medium hover:bg-error hover:text-white transition-colors" data-i18n="preview.reupload">
               重新上传图片
             </button>
           </div>
 
           <!-- 参数调整（生成后显示） -->
           <div id="pixel-params" class="hidden mb-6 space-y-3 p-4 bg-white rounded-lg border border-border">
-            <p class="text-xs text-secondary mb-1">对称增强 + 特征保护 + 色板量化 + 色块优化 + 智能轮廓</p>
+            <p class="text-xs text-secondary mb-1" data-i18n="params.title">对称增强 + 特征保护 + 色板量化 + 色块优化 + 智能轮廓</p>
             <div class="flex items-center justify-between">
-              <label for="pixel-size" class="text-sm text-secondary">像素块大小</label>
+              <label for="pixel-size" class="text-sm text-secondary" data-i18n="params.pixelSize">像素块大小</label>
               <select id="pixel-size" class="px-2 py-1 border border-border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                 <option value="4">4px</option>
                 <option value="8" selected>8px</option>
@@ -157,7 +166,7 @@
               </select>
             </div>
             <div class="flex items-center justify-between">
-              <label for="color-count" class="text-sm text-secondary">颜色数量</label>
+              <label for="color-count" class="text-sm text-secondary" data-i18n="params.colorCount">颜色数量</label>
               <select id="color-count" class="px-2 py-1 border border-border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                 <option value="8">8 色</option>
                 <option value="12">12 色</option>
@@ -165,14 +174,14 @@
               </select>
             </div>
             <div class="flex items-center justify-between">
-              <label for="symmetry-toggle" class="text-sm text-secondary">对称增强</label>
+              <label for="symmetry-toggle" class="text-sm text-secondary" data-i18n="params.symmetry">对称增强</label>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="symmetry-toggle" class="sr-only peer" checked>
                 <div class="w-9 h-5 bg-border peer-checked:bg-primary rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
               </label>
             </div>
             <div class="flex items-center justify-between">
-              <label for="outline-toggle" class="text-sm text-secondary">轮廓增强</label>
+              <label for="outline-toggle" class="text-sm text-secondary" data-i18n="params.outline">轮廓增强</label>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="outline-toggle" class="sr-only peer" checked>
                 <div class="w-9 h-5 bg-border peer-checked:bg-primary rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
@@ -182,13 +191,13 @@
 
           <!-- 操作按钮（生成后显示） -->
           <div id="preview-actions" class="hidden space-y-3">
-            <button id="confirm-save-btn" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-opacity-90 transition-colors">
+            <button id="confirm-save-btn" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-opacity-90 transition-colors" data-i18n="save.confirmBtn">
               确认保存到角色库
             </button>
-            <button id="regenerate-btn" class="w-full bg-white text-primary border border-border py-2.5 rounded-lg font-medium hover:bg-bgLight transition-colors">
+            <button id="regenerate-btn" class="w-full bg-white text-primary border border-border py-2.5 rounded-lg font-medium hover:bg-bgLight transition-colors" data-i18n="save.regenerateBtn">
               重新生成
             </button>
-            <button id="export-single-btn" class="w-full bg-white text-primary border border-border py-2.5 rounded-lg font-medium hover:bg-bgLight transition-colors">
+            <button id="export-single-btn" class="w-full bg-white text-primary border border-border py-2.5 rounded-lg font-medium hover:bg-bgLight transition-colors" data-i18n="save.exportSingleBtn">
               导出单角色图片
             </button>
           </div>
@@ -202,14 +211,14 @@
       <!-- 顶部工具栏 -->
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-border">
         <div class="flex items-center space-x-4">
-          <button id="new-scene-btn" class="px-3 py-1.5 bg-white border border-border rounded text-sm hover:bg-bgLight transition-colors">新建场景</button>
-          <button id="save-scene-btn" class="px-3 py-1.5 bg-white border border-border rounded text-sm hover:bg-bgLight transition-colors">保存场景</button>
+          <button id="new-scene-btn" class="px-3 py-1.5 bg-white border border-border rounded text-sm hover:bg-bgLight transition-colors" data-i18n="scene.newScene">新建场景</button>
+          <button id="save-scene-btn" class="px-3 py-1.5 bg-white border border-border rounded text-sm hover:bg-bgLight transition-colors" data-i18n="scene.saveScene">保存场景</button>
           <div class="flex items-center space-x-2">
-            <button id="undo-btn" class="px-2 py-1.5 bg-white border border-border rounded text-sm hover:bg-bgLight transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled title="撤销 (Ctrl+Z)">↩ 撤销</button>
-            <button id="redo-btn" class="px-2 py-1.5 bg-white border border-border rounded text-sm hover:bg-bgLight transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled title="重做 (Ctrl+Y)">↪ 重做</button>
+            <button id="undo-btn" class="px-2 py-1.5 bg-white border border-border rounded text-sm hover:bg-bgLight transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled data-i18n-title="scene.undoTitle" title="撤销 (Ctrl+Z)"><span data-i18n="scene.undo">↩ 撤销</span></button>
+            <button id="redo-btn" class="px-2 py-1.5 bg-white border border-border rounded text-sm hover:bg-bgLight transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled data-i18n-title="scene.redoTitle" title="重做 (Ctrl+Y)"><span data-i18n="scene.redo">↪ 重做</span></button>
           </div>
         </div>
-        <button id="export-scene-btn" class="px-4 py-1.5 bg-primary text-white rounded text-sm hover:bg-opacity-90 transition-colors">
+        <button id="export-scene-btn" class="px-4 py-1.5 bg-primary text-white rounded text-sm hover:bg-opacity-90 transition-colors" data-i18n="scene.exportScene">
           导出场景图片
         </button>
       </div>
@@ -217,28 +226,28 @@
       <div class="grid grid-cols-12 gap-4" style="height: calc(100vh - 200px);">
         <!-- 左侧：资源面板 -->
         <div class="col-span-2 bg-bgLight rounded-lg p-4 border border-border overflow-y-auto">
-          <h3 class="font-semibold text-sm mb-3">角色库</h3>
+          <h3 class="font-semibold text-sm mb-3" data-i18n="scene.charLibrary">角色库</h3>
           <div id="scene-char-list" class="grid grid-cols-2 gap-2 mb-6">
-            <p class="col-span-2 text-xs text-secondary text-center py-4">加载中...</p>
+            <p class="col-span-2 text-xs text-secondary text-center py-4" data-i18n="scene.loading">加载中...</p>
           </div>
 
-          <h3 class="font-semibold text-sm mb-3">场景模板</h3>
+          <h3 class="font-semibold text-sm mb-3" data-i18n="scene.templates">场景模板</h3>
           <div class="space-y-2" id="scene-templates">
             <div class="scene-template-item bg-white border-2 border-primary rounded-lg p-2 cursor-pointer hover:shadow transition-shadow" data-template="grid">
               <div class="h-10 bg-bgLight rounded mb-1 flex items-center justify-center text-xs text-secondary">网格</div>
-              <p class="text-xs text-center">纯色网格</p>
+              <p class="text-xs text-center" data-i18n="template.grid">纯色网格</p>
             </div>
             <div class="scene-template-item bg-white border border-border rounded-lg p-2 cursor-pointer hover:shadow transition-shadow" data-template="living-room">
               <div class="h-10 bg-warm-100 rounded mb-1 flex items-center justify-center text-xs text-secondary">🏠</div>
-              <p class="text-xs text-center">温馨客厅</p>
+              <p class="text-xs text-center" data-i18n="template.living-room">温馨客厅</p>
             </div>
             <div class="scene-template-item bg-white border border-border rounded-lg p-2 cursor-pointer hover:shadow transition-shadow" data-template="grassland">
               <div class="h-10 bg-green-50 rounded mb-1 flex items-center justify-center text-xs text-secondary">🌿</div>
-              <p class="text-xs text-center">绿色草地</p>
+              <p class="text-xs text-center" data-i18n="template.grassland">绿色草地</p>
             </div>
             <div class="scene-template-item bg-white border border-border rounded-lg p-2 cursor-pointer hover:shadow transition-shadow" data-template="beach">
               <div class="h-10 bg-yellow-50 rounded mb-1 flex items-center justify-center text-xs text-secondary">🏖️</div>
-              <p class="text-xs text-center">阳光海滩</p>
+              <p class="text-xs text-center" data-i18n="template.beach">阳光海滩</p>
             </div>
           </div>
         </div>
@@ -248,16 +257,16 @@
           <div id="canvas-wrapper" class="w-full h-full overflow-auto flex items-center justify-center">
             <canvas id="scene-canvas" class="canvas-grid"></canvas>
           </div>
-          <p id="canvas-hint" class="absolute bottom-3 left-3 text-xs text-secondary bg-white/80 px-2 py-1 rounded">从左侧拖拽角色到画布上</p>
+          <p id="canvas-hint" class="absolute bottom-3 left-3 text-xs text-secondary bg-white/80 px-2 py-1 rounded" data-i18n="scene.canvasHint">从左侧拖拽角色到画布上</p>
         </div>
 
         <!-- 右侧：属性面板 -->
         <div class="col-span-2 bg-bgLight rounded-lg p-4 border border-border overflow-y-auto">
-          <h3 class="font-semibold text-sm mb-3">元素属性</h3>
+          <h3 class="font-semibold text-sm mb-3" data-i18n="scene.propsPanel">元素属性</h3>
           <div id="props-panel" class="space-y-3 text-sm">
-            <p class="text-xs text-secondary text-center py-8">点击画布上的角色查看属性</p>
+            <p class="text-xs text-secondary text-center py-8" data-i18n="scene.propsEmpty">点击画布上的角色查看属性</p>
           </div>
-          <button id="delete-selected-btn" class="w-full mt-6 bg-white text-error border border-error py-2 rounded text-sm hover:bg-error hover:text-white transition-colors hidden">
+          <button id="delete-selected-btn" class="w-full mt-6 bg-white text-error border border-error py-2 rounded text-sm hover:bg-error hover:text-white transition-colors hidden" data-i18n="scene.deleteSelected">
             删除选中角色
           </button>
         </div>
@@ -268,30 +277,30 @@
     <section id="page-resource" class="page-section hidden">
       <!-- 标签切换 -->
       <div class="flex space-x-6 mb-6 border-b border-border">
-        <button id="tab-characters" class="px-1 py-2 tab-active text-sm font-medium" data-resource="characters">角色库</button>
-        <button id="tab-scenes" class="px-1 py-2 text-secondary hover:text-primary transition-colors text-sm font-medium" data-resource="scenes">场景库</button>
+        <button id="tab-characters" class="px-1 py-2 tab-active text-sm font-medium" data-resource="characters" data-i18n="resource.characters">角色库</button>
+        <button id="tab-scenes" class="px-1 py-2 text-secondary hover:text-primary transition-colors text-sm font-medium" data-resource="scenes" data-i18n="resource.scenes">场景库</button>
       </div>
 
       <!-- 角色库视图 -->
       <div id="resource-characters">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center space-x-3">
-            <input type="text" id="search-character" class="px-3 py-2 border border-border rounded text-sm w-48 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="搜索角色名称...">
+            <input type="text" id="search-character" class="px-3 py-2 border border-border rounded text-sm w-48 focus:outline-none focus:ring-2 focus:ring-primary" data-i18n-placeholder="resource.searchPlaceholder" placeholder="搜索角色名称...">
             <select id="filter-source" class="px-3 py-2 border border-border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-              <option value="">全部出处</option>
+              <option value="" data-i18n="resource.allSources">全部出处</option>
             </select>
           </div>
-          <p id="character-count" class="text-sm text-secondary">共 0 个角色</p>
+          <p id="character-count" class="text-sm text-secondary" data-i18n="resource.characterCount">共 0 个角色</p>
         </div>
         <div id="character-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <p class="col-span-full text-center text-secondary py-12">暂无角色，请先在"角色生成"页创建</p>
+          <p class="col-span-full text-center text-secondary py-12" data-i18n="resource.noCharacters">暂无角色，请先在"角色生成"页创建</p>
         </div>
       </div>
 
       <!-- 场景库视图 -->
       <div id="resource-scenes" class="hidden">
         <div id="scene-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <p class="col-span-full text-center text-secondary py-12">暂无场景，请先在"场景编辑"页创建</p>
+          <p class="col-span-full text-center text-secondary py-12" data-i18n="resource.noScenes">暂无场景，请先在"场景编辑"页创建</p>
         </div>
       </div>
     </section>
@@ -300,7 +309,7 @@
 
   <!-- ==================== 页脚 ==================== -->
   <footer class="border-t border-border py-4 text-center text-xs text-secondary">
-    Character Land — 我的角色世界 MVP
+    <span data-i18n="footer.text">Character Land — 我的角色世界 MVP</span>
   </footer>
 
   <!-- ==================== 错误提示弹窗 ==================== -->
@@ -312,8 +321,8 @@
       </div>
       <p id="error-message" class="text-secondary mb-6 leading-relaxed"></p>
       <div class="flex justify-end space-x-3">
-        <button id="error-retry-btn" class="px-4 py-2 bg-white border border-border rounded-lg text-sm hover:bg-bgLight transition-colors hidden">重试</button>
-        <button id="error-close-btn" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-opacity-90 transition-colors">关闭</button>
+        <button id="error-retry-btn" class="px-4 py-2 bg-white border border-border rounded-lg text-sm hover:bg-bgLight transition-colors hidden" data-i18n="modal.retry">重试</button>
+        <button id="error-close-btn" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-opacity-90 transition-colors" data-i18n="modal.close">关闭</button>
       </div>
     </div>
   </div>
@@ -327,7 +336,7 @@
       </div>
       <p id="success-message" class="text-secondary mb-6 leading-relaxed"></p>
       <div class="flex justify-end">
-        <button id="success-close-btn" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-opacity-90 transition-colors">确定</button>
+        <button id="success-close-btn" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-opacity-90 transition-colors" data-i18n="modal.ok">确定</button>
       </div>
     </div>
   </div>
@@ -335,29 +344,29 @@
   <!-- ==================== 编辑角色弹窗 ==================== -->
   <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
     <div class="bg-white rounded-xl p-6 w-[480px] max-h-[80vh] overflow-y-auto shadow-lg">
-      <h3 class="text-lg font-semibold mb-4">编辑角色信息</h3>
+      <h3 class="text-lg font-semibold mb-4" data-i18n="edit.title">编辑角色信息</h3>
       <div class="space-y-4">
         <div>
-          <label for="edit-name" class="block text-sm text-secondary mb-1">角色名称 <span class="text-error">*</span></label>
+          <label for="edit-name" class="block text-sm text-secondary mb-1"><span data-i18n="form.name">角色名称</span> <span class="text-error">*</span></label>
           <input type="text" id="edit-name" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary">
         </div>
         <div>
-          <label for="edit-source" class="block text-sm text-secondary mb-1">角色出处</label>
+          <label for="edit-source" class="block text-sm text-secondary mb-1" data-i18n="form.source">角色出处</label>
           <input type="text" id="edit-source" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary">
         </div>
         <div>
-          <label for="edit-desc" class="block text-sm text-secondary mb-1">角色描述</label>
+          <label for="edit-desc" class="block text-sm text-secondary mb-1" data-i18n="form.description">角色描述</label>
           <textarea id="edit-desc" rows="2" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary resize-none"></textarea>
         </div>
         <div>
-          <label for="edit-quote" class="block text-sm text-secondary mb-1">经典台词</label>
+          <label for="edit-quote" class="block text-sm text-secondary mb-1" data-i18n="form.quote">经典台词</label>
           <textarea id="edit-quote" rows="2" class="w-full px-3 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary resize-none"></textarea>
         </div>
       </div>
       <input type="hidden" id="edit-character-id">
       <div class="flex justify-end space-x-3 mt-6">
-        <button id="edit-cancel-btn" class="px-4 py-2 bg-white border border-border rounded-lg text-sm hover:bg-bgLight transition-colors">取消</button>
-        <button id="edit-save-btn" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-opacity-90 transition-colors">保存修改</button>
+        <button id="edit-cancel-btn" class="px-4 py-2 bg-white border border-border rounded-lg text-sm hover:bg-bgLight transition-colors" data-i18n="modal.cancel">取消</button>
+        <button id="edit-save-btn" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-opacity-90 transition-colors" data-i18n="edit.saveBtn">保存修改</button>
       </div>
     </div>
   </div>
@@ -367,13 +376,13 @@
     <div class="bg-white rounded-xl p-6 w-96 shadow-lg">
       <div class="flex items-center space-x-3 mb-4">
         <span class="text-2xl">🗑️</span>
-        <h3 class="text-lg font-semibold">确认删除</h3>
+        <h3 class="text-lg font-semibold" data-i18n="delete.title">确认删除</h3>
       </div>
-      <p id="delete-message" class="text-secondary mb-6">确定要删除这个角色吗？此操作不可撤销。</p>
+      <p id="delete-message" class="text-secondary mb-6" data-i18n="delete.charConfirm">确定要删除这个角色吗？此操作不可撤销。</p>
       <input type="hidden" id="delete-character-id">
       <div class="flex justify-end space-x-3">
-        <button id="delete-cancel-btn" class="px-4 py-2 bg-white border border-border rounded-lg text-sm hover:bg-bgLight transition-colors">取消</button>
-        <button id="delete-confirm-btn" class="px-4 py-2 bg-error text-white rounded-lg text-sm hover:bg-opacity-90 transition-colors">确认删除</button>
+        <button id="delete-cancel-btn" class="px-4 py-2 bg-white border border-border rounded-lg text-sm hover:bg-bgLight transition-colors" data-i18n="modal.cancel">取消</button>
+        <button id="delete-confirm-btn" class="px-4 py-2 bg-error text-white rounded-lg text-sm hover:bg-opacity-90 transition-colors" data-i18n="delete.confirmBtn">确认删除</button>
       </div>
     </div>
   </div>
@@ -381,14 +390,14 @@
   <!-- ==================== 手动裁剪弹窗 ==================== -->
   <div id="crop-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
     <div class="bg-white rounded-xl p-6 shadow-lg max-w-[90vw] max-h-[90vh] flex flex-col">
-      <h3 class="text-lg font-semibold mb-3">手动框选角色区域</h3>
-      <p class="text-sm text-secondary mb-3">在图片上拖拽框选角色主体</p>
+      <h3 class="text-lg font-semibold mb-3" data-i18n="crop.title">手动框选角色区域</h3>
+      <p class="text-sm text-secondary mb-3" data-i18n="crop.instruction">在图片上拖拽框选角色主体</p>
       <div id="crop-container" class="relative overflow-auto border border-border rounded-lg" style="max-height: 55vh;">
         <canvas id="crop-canvas" class="block cursor-crosshair"></canvas>
       </div>
       <div class="flex justify-end space-x-3 mt-4">
-        <button id="crop-cancel-btn" class="px-4 py-2 bg-white border border-border rounded-lg text-sm hover:bg-bgLight transition-colors">取消</button>
-        <button id="crop-confirm-btn" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-opacity-90 transition-colors">确认裁剪</button>
+        <button id="crop-cancel-btn" class="px-4 py-2 bg-white border border-border rounded-lg text-sm hover:bg-bgLight transition-colors" data-i18n="modal.cancel">取消</button>
+        <button id="crop-confirm-btn" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-opacity-90 transition-colors" data-i18n="crop.confirm">确认裁剪</button>
       </div>
     </div>
   </div>
@@ -406,6 +415,7 @@
       });
   </script>
   <script src="js/analytics.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/segmentation.js"></script>
   <script src="js/pixelate.js"></script>

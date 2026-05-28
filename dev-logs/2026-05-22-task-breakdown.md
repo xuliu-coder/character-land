@@ -23,6 +23,7 @@
 | Phase 12: 智能轮廓 + 颜色量化优化 | 4 | ✅ 已完成 |
 | Phase 13: 像素画质量综合优化 | 5 | ✅ 已完成 |
 | Phase 14: 场景库功能 | 3 | ✅ 已完成 |
+| Phase 15: GA4 数据埋点 | 2 | ✅ 已完成 |
 
 状态标记：⬜ 未开始 | 🔵 进行中 | ✅ 已完成 | ⏸️ 暂缓 | ❌ 取消
 
@@ -554,6 +555,23 @@ Phase 8 (测试优化) — 需Phase 1-7
 - **产出**: 场景库到编辑器的无缝跳转
 - **验证**: 点击编辑 → 画布显示保存的角色布局
 - **状态**: ✅ 已完成
-3. **每完成一个任务**，将状态从 ⬜ 更新为 ✅
-4. **遇到阻塞**，标记为 ⏸️ 并记录原因
-5. **每天结束**，在本目录创建新的日志文件 `YYYY-MM-DD.md`，记录当日进展
+
+---
+
+## Phase 15: GA4 数据埋点 — 用户行为追踪
+
+### 15.1 创建埋点模块 + HTML 集成
+- **描述**: 新建 `js/analytics.js`，封装 `track()`/`trackPageView()` 安全上报函数；`index.html` `<head>` 引入 GA4 script，底部引入 analytics.js
+- **产出**: `window.App.analytics` API，GA4 自动 PV 追踪
+- **验证**: F12 Console 输入 `dataLayer` 能看到 page_view 事件
+- **依赖**: 无
+- **状态**: ✅ 已完成
+
+### 15.2 埋点覆盖核心功能流程
+- **描述**: 在 upload.js / canvas-editor.js / app.js 关键操作点添加 13 个埋点事件
+- **产出**: character_generate_start/done/fail、character_save/export/edit/delete、scene_create/save/export、tab_switch、storage_mode
+- **验证**: GA4 后台实时报告能看到事件数据
+- **依赖**: 15.1
+- **状态**: ✅ 已完成
+
+---
